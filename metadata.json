@@ -1,0 +1,6 @@
+{
+  "name": "WriteAI - Novelist Studio & AI Co-Author",
+  "description": "Professional writing studio for novelists, series authors, and screenwriters with deep plot architecture, character bible, rich text editor, and Gemini AI co-authoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
