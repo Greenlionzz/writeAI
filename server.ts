@@ -58,6 +58,66 @@ async function startServer() {
     }
   });
 
+  // AI Character Generator endpoint using JSON response mode
+  app.post('/api/ai/generate-character', async (req: Request, res: Response) => {
+    try {
+      const { apiKey, model, genre, role, concept, gender } = req.body;
+      const ai = getGenAIClient(apiKey);
+      const targetModel = model?.trim() || 'gemini-3.8-flash';
+
+      const systemPrompt = `You are an elite novelist and character outline designer. 
+You generate rich, cohesive, three-dimensional character profiles for fictional novels. 
+Ensure the character feels incredibly authentic, multi-layered, and free of flat clichés. 
+
+You MUST output your response as a valid, pure JSON object with the following fields and no extra explanation, markdown wrappers, or surrounding text.
+
+JSON Schema:
+{
+  "name": "Full name of the character",
+  "role": "${role || 'Supporting'}",
+  "archetype": "Literary archetype",
+  "age": "Age as a string (e.g., 28 or 'Late 40s')",
+  "occupation": "Occupation or trade",
+  "appearance": "Physical appearance and notable habits (2-3 sentences)",
+  "traits": ["Trait 1", "Trait 2", "Trait 3", "Trait 4"],
+  "motivation": "Core internal/external motivation (1-2 sentences)",
+  "conflict": "Fatal flaw or primary struggle (1-2 sentences)",
+  "backstory": "A rich, evocative backstory of 3-4 sentences"
+}`;
+
+      const userPrompt = `Generate a high-fidelity ${role || 'supporting'} character profile for a story in the "${genre || 'General Fiction'}" genre.
+The character's concept or archetype theme is: "${concept || 'Mystery Figure'}"
+Gender/Aesthetic preference is: "${gender || 'Any'}".
+
+Ensure the backstory, traits, and motivations form a highly compelling, dramatic character arc.`;
+
+      const response = await ai.models.generateContent({
+        model: targetModel,
+        contents: userPrompt,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.85,
+          responseMimeType: "application/json"
+        },
+      });
+
+      const responseText = response.text || '';
+      const cleanedJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsedCharacter = JSON.parse(cleanedJson);
+
+      res.json({
+        success: true,
+        character: parsedCharacter
+      });
+    } catch (err: any) {
+      console.error('Character generation error:', err);
+      res.status(400).json({
+        success: false,
+        error: err.message || 'Failed to generate character with AI'
+      });
+    }
+  });
+
   // Main AI action endpoint
   app.post('/api/ai/action', async (req: Request, res: Response) => {
     try {

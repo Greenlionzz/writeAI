@@ -29,6 +29,7 @@ interface SidebarProjectTreeProps {
   onRenameChapter?: (chapterId: string, newTitle: string) => void;
   onRenameAct?: (actId: string, newTitle: string) => void;
   onCloseMobile?: () => void;
+  onCollapseDesktop?: () => void;
 }
 
 export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
@@ -45,6 +46,7 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
   onRenameChapter,
   onRenameAct,
   onCloseMobile,
+  onCollapseDesktop,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedActs, setCollapsedActs] = useState<Record<string, boolean>>({});
@@ -134,6 +136,23 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
 
   return (
     <aside className="w-full lg:w-72 border-r border-border bg-card flex flex-col shrink-0 select-none overflow-hidden h-full shadow-lg lg:shadow-none">
+      {/* Desktop Top Header (only on desktop screens) */}
+      {!onCloseMobile && onCollapseDesktop && (
+        <div className="hidden lg:flex p-3 border-b border-border flex items-center justify-between bg-card shrink-0">
+          <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+            <Layers className="w-4 h-4 text-primary" />
+            <span>Manuscript Outline</span>
+          </div>
+          <button
+            onClick={onCollapseDesktop}
+            className="px-2 py-1 rounded-md text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted border border-border/60 transition-all shadow-3xs"
+            title="Collapse Sidebar"
+          >
+            ◀ Collapse
+          </button>
+        </div>
+      )}
+
       {/* Mobile Top Header (only on mobile) */}
       {onCloseMobile && (
         <div className="lg:hidden p-3 border-b border-border flex items-center justify-between bg-card shrink-0">

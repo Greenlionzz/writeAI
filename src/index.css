@@ -68,25 +68,25 @@
     --ring: #3b82f6;
   }
 
-  /* SEPIA THEME (Warm Collector's Parchment) */
+  /* SEPIA THEME (Warm Old-Book Parchment - Slightly Darker & Richer) */
   .sepia {
-    --background: #f5efe6;
-    --foreground: #2d2218;
-    --card: #fdfaf3;
-    --card-foreground: #2d2218;
-    --popover: #fdfaf3;
-    --popover-foreground: #2d2218;
-    --primary: #b45309;
+    --background: #dfd2b5;
+    --foreground: #2d1e12;
+    --card: #ebdcb9;
+    --card-foreground: #2d1e12;
+    --popover: #ebdcb9;
+    --popover-foreground: #2d1e12;
+    --primary: #92400e;
     --primary-foreground: #ffffff;
-    --muted: #ece1ce;
-    --muted-foreground: #786552;
-    --accent: #ece1ce;
-    --accent-foreground: #2d2218;
-    --destructive: #dc2626;
+    --muted: #d5c6a1;
+    --muted-foreground: #6b533e;
+    --accent: #d5c6a1;
+    --accent-foreground: #2d1e12;
+    --destructive: #b91c1c;
     --destructive-foreground: #ffffff;
-    --border: #ded2bd;
-    --input: #ded2bd;
-    --ring: #b45309;
+    --border: #caa985;
+    --input: #caa985;
+    --ring: #92400e;
   }
 
   * {

@@ -286,19 +286,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Type className="w-3.5 h-3.5 text-primary" />
               <span>Manuscript Typography</span>
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { id: 'Newsreader', label: 'Newsreader Serif' },
                 { id: 'Plus Jakarta Sans', label: 'Clean Sans' },
                 { id: 'JetBrains Mono', label: 'Monospace' },
+                { id: 'Lora', label: 'Lora Book Serif' },
+                { id: 'Playfair Display', label: 'Playfair Elegance' },
               ].map((f) => (
                 <button
                   key={f.id}
                   type="button"
                   onClick={() => setEditorFontFamily(f.id as any)}
-                  className={`p-2 rounded-lg border text-center transition-all ${
+                  className={`px-3 py-2 rounded-lg border text-xs text-center transition-all flex-1 min-w-[120px] ${
                     editorFontFamily === f.id
-                      ? 'bg-primary/10 border-primary text-primary font-bold'
+                      ? 'bg-primary/10 border-primary text-primary font-bold shadow-2xs'
                       : 'bg-muted/20 border-border text-foreground hover:bg-muted/40'
                   }`}
                 >

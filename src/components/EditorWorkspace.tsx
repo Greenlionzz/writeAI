@@ -25,6 +25,8 @@ import {
   Gauge,
   Target,
   Trophy,
+  Undo,
+  Redo,
 } from 'lucide-react';
 import { Scene, UserSettings } from '../types/writing';
 import { analyzeReadability } from '../utils/readability';
@@ -82,6 +84,51 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
   const [replaceText, setReplaceText] = useState('');
   const [matchCount, setMatchCount] = useState(0);
   const [internalFocusMode, setInternalFocusMode] = useState(false);
+
+  // Custom Undo/Redo tracking states
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [currentSceneId, setCurrentSceneId] = useState<string | null>(null);
+
+  // Initialize/reset history when the scene changes
+  useEffect(() => {
+    if (scene) {
+      if (scene.id !== currentSceneId) {
+        // We switched scenes! Start fresh with the current content
+        setHistory([scene.content || '']);
+        setHistoryIndex(0);
+        setCurrentSceneId(scene.id);
+      } else {
+        // Standard content change. Check if we need to record a history state.
+        const currentHistText = history[historyIndex];
+        if (scene.content !== currentHistText) {
+          const newHistory = history.slice(0, historyIndex + 1);
+          setHistory([...newHistory, scene.content || '']);
+          setHistoryIndex(newHistory.length);
+        }
+      }
+    } else {
+      setHistory([]);
+      setHistoryIndex(-1);
+      setCurrentSceneId(null);
+    }
+  }, [scene?.id, scene?.content]);
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const nextIndex = historyIndex - 1;
+      setHistoryIndex(nextIndex);
+      onUpdateContent(history[nextIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      setHistoryIndex(nextIndex);
+      onUpdateContent(history[nextIndex]);
+    }
+  };
 
   const isFocusMode = propIsFocusMode !== undefined ? propIsFocusMode : internalFocusMode;
   const toggleFocusMode = onToggleFocusMode || (() => setInternalFocusMode((prev) => !prev));
@@ -208,7 +255,17 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
     const isMod = e.ctrlKey || e.metaKey;
 
     if (isMod) {
-      if (e.key.toLowerCase() === 'b') {
+      if (e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if (e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.key.toLowerCase() === 'b') {
         e.preventDefault();
         applyFormatting('**', '**');
       } else if (e.key.toLowerCase() === 'i') {
@@ -269,15 +326,19 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
   const charCount = scene?.content?.length || 0;
   const readingTimeMin = Math.max(1, Math.ceil(wordCount / 220));
 
-  const getFontFamilyClass = () => {
+  const getFontFamilyStyle = () => {
     switch (settings.editorFontFamily) {
       case 'Plus Jakarta Sans':
-        return 'font-sans';
+        return '"Plus Jakarta Sans", sans-serif';
       case 'JetBrains Mono':
-        return 'font-mono';
+        return '"JetBrains Mono", monospace';
+      case 'Lora':
+        return '"Lora", serif';
+      case 'Playfair Display':
+        return '"Playfair Display", serif';
       case 'Newsreader':
       default:
-        return 'font-serif';
+        return '"Newsreader", serif';
     }
   };
 
@@ -304,6 +365,30 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
       {/* Top Toolbar */}
       <div className="h-10 border-b border-border/80 bg-card/60 px-2 sm:px-3 flex items-center justify-between shrink-0 select-none">
         <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-1 scrollbar-none">
+          {/* Undo / Redo */}
+          <button
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+            className={`p-1.5 rounded hover:bg-muted transition-all duration-150 ${
+              historyIndex <= 0 ? 'text-muted-foreground/35 cursor-not-allowed opacity-40' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+            className={`p-1.5 rounded hover:bg-muted transition-all duration-150 ${
+              historyIndex >= history.length - 1 ? 'text-muted-foreground/35 cursor-not-allowed opacity-40' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title="Redo (Ctrl+Shift+Z or Ctrl+Y)"
+          >
+            <Redo className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="h-4 w-[1px] bg-border mx-1" />
+
           {/* Text Style Controls */}
           <button
             onClick={() => applyFormatting('**', '**')}
@@ -399,6 +484,58 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5">
+          {/* Daily Goal Circular Progress Ring */}
+          <div
+            onClick={onOpenSettings}
+            className="flex items-center gap-2 pl-1.5 pr-2 sm:pr-2.5 py-0.5 rounded-full hover:bg-muted text-xs transition-all cursor-pointer group shrink-0 select-none"
+            title={`Daily Word Goal: ${wordsToday.toLocaleString()} of ${dailyGoal.toLocaleString()} words today (${goalPercent}%) - Click to adjust in Settings`}
+          >
+            <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+              {/* SVG Ring */}
+              <svg className="w-full h-full transform -rotate-90">
+                {/* Track Circle */}
+                <circle
+                  cx="14"
+                  cy="14"
+                  r="11"
+                  className="stroke-muted-foreground/15"
+                  strokeWidth="2.5"
+                  fill="transparent"
+                />
+                {/* Progress Circle Fill */}
+                <circle
+                  cx="14"
+                  cy="14"
+                  r="11"
+                  className={`transition-all duration-500 ease-out ${
+                    isGoalMet ? 'stroke-amber-500' : 'stroke-primary'
+                  }`}
+                  strokeWidth="2.5"
+                  strokeDasharray="69.11" // 2 * Math.PI * 11 = 69.115
+                  strokeDashoffset={69.11 * (1 - Math.min(100, goalPercent) / 100)}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+              {/* Inner Status Indicator */}
+              <div className="absolute inset-0 flex items-center justify-center text-[8px] font-extrabold tabular-nums">
+                {isGoalMet ? (
+                  <Trophy className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
+                ) : (
+                  <span className="text-foreground">{goalPercent}%</span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col text-left leading-none hidden sm:flex">
+              <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider scale-90 -ml-1">Daily Goal</span>
+              <span className="text-[10px] font-bold text-foreground tabular-nums mt-0.5">
+                {wordsToday.toLocaleString()} / {dailyGoal.toLocaleString()} <span className="font-medium text-muted-foreground">w</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="h-4 w-[1px] bg-border mx-0.5 hidden sm:block shrink-0" />
+
           {/* Readability & Sentence Complexity Inspector */}
           <button
             onClick={() => setShowReadabilityModal(true)}
@@ -567,10 +704,11 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
               onMouseUp={handleSelectionChange}
               spellCheck={settings.spellcheckEnabled ?? true}
               placeholder="Type your scene here or prompt the AI Co-Author to begin drafting..."
-              className={`w-full flex-1 bg-transparent text-foreground border-none outline-none resize-none leading-relaxed transition-all placeholder:text-muted-foreground/40 ${getFontFamilyClass()}`}
+              className="w-full flex-1 bg-transparent text-foreground border-none outline-none resize-none leading-relaxed transition-all placeholder:text-muted-foreground/40"
               style={{
                 fontSize: `${settings.editorFontSize}px`,
                 lineHeight: 1.85,
+                fontFamily: getFontFamilyStyle(),
               }}
             />
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   BookOpen,
@@ -81,6 +81,34 @@ export const Header: React.FC<HeaderProps> = ({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showProjectsMenu, setShowProjectsMenu] = useState(false);
   const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
+
+  // References for outside-click menu dismissals
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const projectsMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMoreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Click outside menu auto-closing effect
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (showExportMenu && exportMenuRef.current && !exportMenuRef.current.contains(target)) {
+        setShowExportMenu(false);
+      }
+      if (showProjectsMenu && projectsMenuRef.current && !projectsMenuRef.current.contains(target)) {
+        setShowProjectsMenu(false);
+      }
+      if (showMobileMoreMenu && mobileMoreMenuRef.current && !mobileMoreMenuRef.current.contains(target)) {
+        setShowMobileMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [showExportMenu, showProjectsMenu, showMobileMoreMenu]);
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [pdfExportProgress, setPdfExportProgress] = useState<PDFExportProgress | null>(null);
 
@@ -129,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="h-4 w-[1px] bg-border mx-0.5 hidden xs:block" />
 
-        <div className="relative min-w-0">
+        <div className="relative min-w-0" ref={projectsMenuRef}>
           <button
             onClick={() => setShowProjectsMenu(!showProjectsMenu)}
             className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded-md hover:bg-accent transition-colors max-w-[80px] xs:max-w-[110px] sm:max-w-[130px] xl:max-w-[210px] truncate"
@@ -328,7 +356,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Export Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={exportMenuRef}>
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
             className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors border border-border/40"
@@ -430,7 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Mobile Overflow Menu Button (mobile only) */}
-        <div className="relative xl:hidden">
+        <div className="relative xl:hidden" ref={mobileMoreMenuRef}>
           <button
             onClick={() => setShowMobileMoreMenu(!showMobileMoreMenu)}
             className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40"

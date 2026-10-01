@@ -84,6 +84,9 @@ export interface Character {
   notes?: string;
   colorTag?: string;
   imageUrl?: string;
+  personalityTags?: string[];
+  relationships?: { characterId: string; type: string; description: string }[];
+  goals?: string[];
 }
 
 export interface Location {
@@ -142,7 +145,7 @@ export interface UserSettings {
   selectedModel: string;
   theme: 'dark' | 'light' | 'sepia';
   editorFontSize: number;
-  editorFontFamily: 'Newsreader' | 'Plus Jakarta Sans' | 'JetBrains Mono';
+  editorFontFamily: 'Newsreader' | 'Plus Jakarta Sans' | 'JetBrains Mono' | 'Lora' | 'Playfair Display';
   autoSaveIntervalMs: number;
   soundEffects: boolean;
   dailyWordGoal?: number;

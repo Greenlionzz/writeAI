@@ -10,20 +10,122 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { Project, Scene } from '../types/writing';
+import { Project, Scene, UserSettings } from '../types/writing';
+
+// Safe helper to parse inline Markdown into React nodes
+const parseInlineMarkdown = (text: string): React.ReactNode[] => {
+  // Split the text by inline tags: bold (**), italic (*), strikethrough (~~), and underline (<u>...</u>)
+  const regex = /(\*\*.*?\*\*|\*.*?\*|~~.*?~~|<u>.*?<\/u>)/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={idx} className="font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em key={idx} className="italic">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('~~') && part.endsWith('~~')) {
+      return (
+        <del key={idx} className="line-through opacity-75">
+          {part.slice(2, -2)}
+        </del>
+      );
+    }
+    if (part.startsWith('<u>') && part.endsWith('</u>')) {
+      return (
+        <u key={idx} className="underline">
+          {part.slice(3, -4)}
+        </u>
+      );
+    }
+    return <span key={idx}>{part}</span>;
+  });
+};
+
+// Helper to render lines with headings, blockquotes, or dividers
+const renderParagraphWithMarkdown = (para: string, pIdx: number) => {
+  const trimmed = para.trim();
+  if (!trimmed) return null;
+
+  // Scene break separator
+  if (trimmed === '* * *' || trimmed === '***') {
+    return (
+      <div key={pIdx} className="py-6 text-center tracking-widest opacity-55 font-mono text-xs select-none">
+        * * *
+      </div>
+    );
+  }
+
+  // Heading H1
+  if (trimmed.startsWith('# ')) {
+    return (
+      <h1 key={pIdx} className="text-2xl md:text-3xl font-bold tracking-tight mt-8 mb-4 border-b border-current/10 pb-2 font-serif text-foreground">
+        {parseInlineMarkdown(trimmed.slice(2))}
+      </h1>
+    );
+  }
+
+  // Heading H2
+  if (trimmed.startsWith('## ')) {
+    return (
+      <h2 key={pIdx} className="text-xl md:text-2xl font-bold tracking-tight mt-6 mb-3 font-serif text-foreground">
+        {parseInlineMarkdown(trimmed.slice(3))}
+      </h2>
+    );
+  }
+
+  // Heading H3
+  if (trimmed.startsWith('### ')) {
+    return (
+      <h3 key={pIdx} className="text-lg md:text-xl font-bold tracking-tight mt-5 mb-2 font-serif text-foreground">
+        {parseInlineMarkdown(trimmed.slice(4))}
+      </h3>
+    );
+  }
+
+  // Blockquote
+  if (trimmed.startsWith('> ')) {
+    return (
+      <blockquote key={pIdx} className="border-l-4 border-primary/40 pl-4 py-1 italic my-4 text-muted-foreground/90 leading-relaxed font-serif">
+        {parseInlineMarkdown(trimmed.slice(2))}
+      </blockquote>
+    );
+  }
+
+  // Standard paragraph
+  return (
+    <p
+      key={pIdx}
+      className={pIdx === 0 ? 'prose-drop-cap text-justify leading-relaxed font-serif' : 'indent-6 text-justify leading-relaxed font-serif'}
+    >
+      {parseInlineMarkdown(trimmed)}
+    </p>
+  );
+};
 
 interface ReaderPreviewModalProps {
   project: Project;
   onClose: () => void;
+  settings: UserSettings;
 }
 
 export const ReaderPreviewModal: React.FC<ReaderPreviewModalProps> = ({
   project,
   onClose,
+  settings,
 }) => {
   const [readerTheme, setReaderTheme] = useState<'paper' | 'sepia' | 'dark'>('paper');
   const [fontSize, setFontSize] = useState<number>(19);
-  const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif');
+  const [fontFamily, setFontFamily] = useState<string>(settings.editorFontFamily || 'Newsreader');
 
   const getThemeClasses = () => {
     switch (readerTheme) {
@@ -66,24 +168,21 @@ export const ReaderPreviewModal: React.FC<ReaderPreviewModalProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Font Family */}
-          <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-md text-xs">
-            <button
-              onClick={() => setFontFamily('serif')}
-              className={`px-2 py-1 rounded font-serif ${
-                fontFamily === 'serif' ? 'bg-card text-foreground font-semibold shadow-xs' : 'text-muted-foreground'
-              }`}
+          {/* Typography Font Selector Dropdown */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+            <span className="hidden md:inline font-medium">Font:</span>
+            <select
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+              className="bg-muted border border-border/80 text-foreground rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+              title="Change reading typeface"
             >
-              Serif
-            </button>
-            <button
-              onClick={() => setFontFamily('sans')}
-              className={`px-2 py-1 rounded font-sans ${
-                fontFamily === 'sans' ? 'bg-card text-foreground font-semibold shadow-xs' : 'text-muted-foreground'
-              }`}
-            >
-              Sans
-            </button>
+              <option value="Newsreader">Newsreader Serif</option>
+              <option value="Plus Jakarta Sans">Clean Sans</option>
+              <option value="JetBrains Mono">Monospace</option>
+              <option value="Lora">Lora Book Serif</option>
+              <option value="Playfair Display">Playfair Elegance</option>
+            </select>
           </div>
 
           {/* Font Size Adjusters */}
@@ -159,10 +258,21 @@ export const ReaderPreviewModal: React.FC<ReaderPreviewModalProps> = ({
       {/* Book Reader Viewport */}
       <div className={`flex-1 overflow-y-auto px-4 py-12 flex justify-center transition-colors ${getThemeClasses()}`}>
         <article
-          className={`w-full max-w-2xl p-8 md:p-14 rounded-2xl border transition-colors select-text ${getCardBg()} ${
-            fontFamily === 'serif' ? 'font-serif' : 'font-sans'
-          }`}
-          style={{ fontSize: `${fontSize}px`, lineHeight: 1.85 }}
+          className={`w-full max-w-2xl p-8 md:p-14 rounded-2xl border transition-all select-text ${getCardBg()}`}
+          style={{
+            fontSize: `${fontSize}px`,
+            lineHeight: 1.85,
+            fontFamily:
+              fontFamily === 'Plus Jakarta Sans'
+                ? '"Plus Jakarta Sans", sans-serif'
+                : fontFamily === 'JetBrains Mono'
+                ? '"JetBrains Mono", monospace'
+                : fontFamily === 'Lora'
+                ? '"Lora", serif'
+                : fontFamily === 'Playfair Display'
+                ? '"Playfair Display", serif'
+                : '"Newsreader", serif',
+          }}
         >
           {/* Title Page */}
           <header className="text-center py-12 border-b border-current/15 mb-14">
@@ -213,28 +323,7 @@ export const ReaderPreviewModal: React.FC<ReaderPreviewModalProps> = ({
                             <div className="space-y-4 text-justify">
                               {scene.content
                                 .split('\n\n')
-                                .map((para, pIdx) => {
-                                  const trimmed = para.trim();
-                                  if (!trimmed) return null;
-                                  if (trimmed === '* * *' || trimmed === '***') {
-                                    return (
-                                      <div
-                                        key={pIdx}
-                                        className="py-4 text-center tracking-widest opacity-50 font-mono text-xs"
-                                      >
-                                        * * *
-                                      </div>
-                                    );
-                                  }
-                                  return (
-                                    <p
-                                      key={pIdx}
-                                      className={pIdx === 0 ? 'prose-drop-cap' : 'indent-6'}
-                                    >
-                                      {trimmed}
-                                    </p>
-                                  );
-                                })}
+                                .map((para, pIdx) => renderParagraphWithMarkdown(para, pIdx))}
                             </div>
                           </section>
                         ))}

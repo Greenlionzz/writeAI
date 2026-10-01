@@ -156,21 +156,21 @@ export function exportProjectHTML(project: Project): void {
         <h2>${act.title}</h2>
       </section>`;
 
-      act.chapters.forEach((chapter) => {
-        manuscriptHtml += `<section class="chapter-block">
-          <h3>${chapter.title}</h3>`;
+        act.chapters.forEach((chapter) => {
+          manuscriptHtml += `<section class="chapter-block">
+            <h3>${chapter.title}</h3>`;
 
-        chapter.scenes.forEach((scene) => {
-          manuscriptHtml += `<article class="scene-block">
-            <h4>${scene.title}</h4>
-            <div class="scene-prose">
-              ${scene.content
-                .split('\n\n')
-                .map((p) => `<p>${p.trim().replace(/\n/g, '<br/>')}</p>`)
-                .join('')}
-            </div>
-          </article>`;
-        });
+          chapter.scenes.forEach((scene) => {
+            manuscriptHtml += `<article class="scene-block">
+              <h4>${scene.title}</h4>
+              <div class="scene-prose">
+                ${scene.content
+                  .split('\n\n')
+                  .map((p) => parseMarkdownToHtml(p))
+                  .join('')}
+              </div>
+            </article>`;
+          });
 
         manuscriptHtml += `</section>`;
       });
@@ -295,18 +295,18 @@ export function exportProjectEPUB(project: Project): void {
   project.books.forEach((book) => {
     book.acts.forEach((act) => {
       act.chapters.forEach((chapter) => {
-        chapter.scenes.forEach((scene, sIdx) => {
-          const sceneId = `scene_${scene.id}`;
-          spineItems += `<itemref idref="${sceneId}" />\n`;
-          chapterSections += `
-          <section id="${sceneId}" class="chapter-content">
-            <h2>${chapter.title} - ${scene.title}</h2>
-            ${scene.content
-              .split('\n\n')
-              .map((p) => `<p>${escapeXml(p.trim())}</p>`)
-              .join('')}
-          </section>`;
-        });
+          chapter.scenes.forEach((scene, sIdx) => {
+            const sceneId = `scene_${scene.id}`;
+            spineItems += `<itemref idref="${sceneId}" />\n`;
+            chapterSections += `
+            <section id="${sceneId}" class="chapter-content">
+              <h2>${chapter.title} - ${scene.title}</h2>
+              ${scene.content
+                .split('\n\n')
+                .map((p) => parseMarkdownToHtml(p))
+                .join('')}
+            </section>`;
+          });
       });
     });
   });
@@ -423,4 +423,56 @@ function escapeRtf(text: string): string {
     .replace(/{/g, '\\{')
     .replace(/}/g, '\\}')
     .replace(/\n/g, '\\par ');
+}
+
+// Translate block and inline Markdown to standard styled HTML strings
+export function parseMarkdownToHtml(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  // Scene break
+  if (trimmed === '* * *' || trimmed === '***') {
+    return `<div class="separator" style="text-align: center; margin: 2rem 0; color: #777; letter-spacing: 0.5em;">* * *</div>`;
+  }
+
+  // Heading H1
+  if (trimmed.startsWith('# ')) {
+    return `<h1>${parseInlineMarkdownHtml(trimmed.slice(2))}</h1>`;
+  }
+
+  // Heading H2
+  if (trimmed.startsWith('## ')) {
+    return `<h2>${parseInlineMarkdownHtml(trimmed.slice(3))}</h2>`;
+  }
+
+  // Heading H3
+  if (trimmed.startsWith('### ')) {
+    return `<h3>${parseInlineMarkdownHtml(trimmed.slice(4))}</h3>`;
+  }
+
+  // Blockquote
+  if (trimmed.startsWith('> ')) {
+    return `<blockquote style="border-left: 4px solid #ccd; padding-left: 1rem; margin: 1.5rem 0; font-style: italic; color: #555;">${parseInlineMarkdownHtml(trimmed.slice(2))}</blockquote>`;
+  }
+
+  // Paragraph
+  return `<p>${parseInlineMarkdownHtml(trimmed)}</p>`;
+}
+
+function parseInlineMarkdownHtml(text: string): string {
+  // Safe simple escape to prevent injection while compiling valid typography elements
+  let safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Translate markdown tags to matching HTML tags
+  safe = safe
+    .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/g, '<u>$1</u>') // Allow <u> tag
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/~~(.*?)~~/g, '<del>$1</del>')
+    .replace(/\n/g, '<br/>');
+
+  return safe;
 }

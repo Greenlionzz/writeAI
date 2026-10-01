@@ -16,8 +16,13 @@ import {
   FileText,
   AlertCircle,
   X,
+  Users,
+  GitCommit,
+  CheckCircle,
+  HelpCircle,
+  User,
 } from 'lucide-react';
-import { Project, UserSettings } from '../types/writing';
+import { Project, UserSettings, Character, PlotCard } from '../types/writing';
 import { exportProjectJSON } from '../utils/storage';
 
 interface DashboardViewProps {
@@ -53,7 +58,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [quote] = useState(() => WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)]);
+
+  // Grab the currently active project
+  const activeProject = projects.find((p) => p.id === activeProjectId) || projects[0];
 
   // Helper to calculate total words inside a project
   const getProjectWords = (project: Project): number => {
@@ -97,7 +106,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       try {
         const json = JSON.parse(event.target?.result as string);
         if (json.id && json.title && Array.isArray(json.books)) {
-          // Add random ID suffix to prevent duplicate key collisions
           const importedProject: Project = {
             ...json,
             id: `${json.id}_imported_${Date.now()}`,
@@ -114,6 +122,216 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       }
     };
     reader.readAsText(file);
+  };
+
+  // ---------------------------------------------------------------------------
+  // GENERATE HEATMAP GRID DATA (Last 16 weeks / 112 days)
+  // ---------------------------------------------------------------------------
+  const renderHeatmap = () => {
+    if (!activeProject) return null;
+
+    const daysCount = 112; // 16 weeks
+    const today = new Date();
+    const dates: { dateStr: string; dateObj: Date; words: number }[] = [];
+
+    // Fill dates backwards from today
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const statsEntry = activeProject.stats?.find((s) => s.date === dateStr);
+      dates.push({
+        dateStr,
+        dateObj: d,
+        words: statsEntry?.wordsAdded || 0,
+      });
+    }
+
+    // Group dates into columns of 7 days (representing weeks)
+    const weeks: typeof dates[] = [];
+    for (let i = 0; i < dates.length; i += 7) {
+      weeks.push(dates.slice(i, i + 7));
+    }
+
+    return (
+      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span>Writing Activity Heatmap</span>
+            </h3>
+            <p className="text-[11px] text-muted-foreground">Daily word consistency for active project: {activeProject.title}</p>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
+            <span>Less</span>
+            <span className="w-2.5 h-2.5 rounded bg-slate-200 dark:bg-slate-800" />
+            <span className="w-2.5 h-2.5 rounded bg-indigo-100 dark:bg-indigo-950/40" />
+            <span className="w-2.5 h-2.5 rounded bg-indigo-300 dark:bg-indigo-800/60" />
+            <span className="w-2.5 h-2.5 rounded bg-indigo-500 dark:bg-indigo-600" />
+            <span>More</span>
+          </div>
+        </div>
+
+        {/* Heatmap Grid wrapper */}
+        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none justify-between">
+          {weeks.map((week, wIdx) => (
+            <div key={wIdx} className="flex flex-col gap-1 shrink-0">
+              {week.map((day, dIdx) => {
+                let cellColor = 'bg-slate-200 dark:bg-slate-800';
+                if (day.words > 0 && day.words < 300) {
+                  cellColor = 'bg-indigo-100 dark:bg-indigo-950/40 border border-indigo-200/20';
+                } else if (day.words >= 300 && day.words < 1000) {
+                  cellColor = 'bg-indigo-300 dark:bg-indigo-800/60 border border-indigo-400/20';
+                } else if (day.words >= 1000) {
+                  cellColor = 'bg-indigo-500 dark:bg-indigo-600';
+                }
+
+                const dayLabel = day.dateObj.toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                });
+
+                return (
+                  <div
+                    key={dIdx}
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-xs transition-all hover:scale-110 hover:ring-2 hover:ring-primary/40 relative group ${cellColor}`}
+                    title={`${dayLabel}: ${day.words.toLocaleString()} words written`}
+                  >
+                    {/* Compact custom rich tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-50 bg-slate-900 dark:bg-slate-950 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap">
+                      <span className="font-semibold block">{dayLabel}</span>
+                      <span className="text-indigo-300 font-mono">{day.words.toLocaleString()} words</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // GENERATE PLOTLINE VISUAL TIMELINE WIDGET
+  // ---------------------------------------------------------------------------
+  const renderPlotlineTimeline = () => {
+    if (!activeProject) return null;
+    const cards = [...(activeProject.plotCards || [])].sort((a, b) => a.order - b.order);
+
+    return (
+      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+            <GitCommit className="w-4 h-4 text-indigo-500" />
+            <span>Plotline Visual Timeline</span>
+          </h3>
+          <p className="text-[11px] text-muted-foreground">Horizontal sequence of plot beats & dramatic conflict arcs</p>
+        </div>
+
+        {cards.length === 0 ? (
+          <div className="border border-dashed border-border/60 rounded-xl p-6 text-center text-xs text-muted-foreground">
+            No plot cards defined. Set up beats inside your Plot Board to visualize them here!
+          </div>
+        ) : (
+          <div className="relative flex items-center overflow-x-auto py-4 scrollbar-none gap-6 select-none">
+            {/* Absolute horizontal wire-frame connector line */}
+            <div className="absolute top-[38px] left-8 right-8 h-[2px] bg-border/60 -z-10" />
+
+            {cards.map((card, idx) => {
+              const statusColor =
+                card.status === 'Done'
+                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
+                  : card.status === 'Revised'
+                  ? 'border-purple-500 bg-purple-500/10 text-purple-600'
+                  : card.status === 'Drafted'
+                  ? 'border-blue-500 bg-blue-500/10 text-blue-600'
+                  : 'border-slate-500 bg-slate-500/10 text-slate-600';
+
+              return (
+                <div key={card.id} className="relative flex flex-col items-center shrink-0 w-44 group">
+                  {/* Visual Node Dot */}
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-[10px] shadow-xs z-10 bg-card transition-all group-hover:scale-110 ${statusColor}`}>
+                    {idx + 1}
+                  </div>
+
+                  {/* Beat Details Card */}
+                  <div className="mt-3.5 bg-card/80 border border-border/80 hover:border-border rounded-lg p-2.5 text-center w-full shadow-2xs hover:shadow-xs transition-all">
+                    <span className="text-[9px] uppercase tracking-wider font-bold block text-muted-foreground">
+                      Act {card.act || '1'}
+                    </span>
+                    <h4 className="text-xs font-bold text-foreground truncate mt-0.5 leading-tight" title={card.title}>
+                      {card.title}
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
+                      {card.summary}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // GENERATE CHARACTER CAST GALLERY SIDEBAR WIDGET
+  // ---------------------------------------------------------------------------
+  const renderCharacterGallery = () => {
+    if (!activeProject) return null;
+    const cast = activeProject.characters || [];
+
+    return (
+      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+        <div className="flex items-center justify-between mb-3.5">
+          <div>
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span>Core Character Cast</span>
+            </h3>
+            <p className="text-[11px] text-muted-foreground">Click a portrait to inspect profile & backstory details</p>
+          </div>
+        </div>
+
+        {cast.length === 0 ? (
+          <div className="border border-dashed border-border/60 rounded-xl p-6 text-center text-xs text-muted-foreground leading-relaxed">
+            No characters casted. Open your Characters Bible inside the editor to create your first cast list!
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {cast.map((char) => {
+              const ringColor =
+                char.role === 'Protagonist'
+                  ? 'border-indigo-500 ring-indigo-500/10'
+                  : char.role === 'Antagonist'
+                  ? 'border-red-500 ring-red-500/10'
+                  : 'border-slate-500 ring-slate-500/10';
+
+              return (
+                <button
+                  key={char.id}
+                  onClick={() => setSelectedCharacter(char)}
+                  className="flex flex-col items-center bg-card hover:bg-accent/40 border border-border/60 hover:border-border/90 rounded-xl p-3 text-center transition-all shadow-3xs hover:shadow-2xs group"
+                >
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center bg-muted ring-4 shrink-0 transition-transform group-hover:scale-105 ${ringColor}`}>
+                    <User className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <h4 className="text-xs font-bold text-foreground truncate w-full mt-2 leading-tight">
+                    {char.name}
+                  </h4>
+                  <span className="text-[9px] font-semibold text-muted-foreground/80 mt-0.5 uppercase tracking-wider block">
+                    {char.role}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -195,6 +413,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-[10px] text-muted-foreground block mt-1">
               Goal: {settings.dailyWordGoal || 1000}w daily
             </span>
+          </div>
+        </div>
+
+        {/* Dynamic Activity and Visual Beats Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            {renderHeatmap()}
+            {renderPlotlineTimeline()}
+          </div>
+          <div>
+            {renderCharacterGallery()}
           </div>
         </div>
 
@@ -440,6 +669,81 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/95 transition-colors shadow-sm"
               >
                 Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Character Quick Inspect Modal */}
+      {selectedCharacter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setSelectedCharacter(null)}
+          />
+
+          <div className="relative bg-card border border-border rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200 text-left z-10 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center font-bold text-primary shrink-0">
+                  {selectedCharacter.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">{selectedCharacter.name}</h3>
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block">
+                    {selectedCharacter.role} {selectedCharacter.archetype && `· ${selectedCharacter.archetype}`}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCharacter(null)}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              {selectedCharacter.traits?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-foreground">Personality Traits</h4>
+                  <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                    {selectedCharacter.traits.join(' · ')}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="font-bold text-foreground">Core Motivation</h4>
+                <p className="text-muted-foreground mt-0.5 leading-relaxed font-serif italic">
+                  "{selectedCharacter.motivation}"
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-foreground">Core Conflict</h4>
+                <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                  {selectedCharacter.conflict}
+                </p>
+              </div>
+
+              {selectedCharacter.backstory && (
+                <div>
+                  <h4 className="font-bold text-foreground">Backstory Summary</h4>
+                  <p className="text-muted-foreground mt-0.5 leading-relaxed font-serif line-clamp-4">
+                    {selectedCharacter.backstory}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-border/60 mt-2">
+              <button
+                onClick={() => setSelectedCharacter(null)}
+                className="px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 transition-colors shadow-xs"
+              >
+                Close Profile
               </button>
             </div>
           </div>

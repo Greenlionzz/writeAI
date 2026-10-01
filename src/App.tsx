@@ -27,6 +27,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CorkboardView } from './components/CorkboardView';
 import { StyleCritiquePanel } from './components/StyleCritiquePanel';
+import { PanelLeft } from 'lucide-react';
 
 import { DashboardView } from './components/DashboardView';
 
@@ -56,6 +57,7 @@ export default function App() {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [mobileOutlineOpen, setMobileOutlineOpen] = useState(false);
+  const [leftTreeCollapsed, setLeftTreeCollapsed] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   // Status
@@ -838,7 +840,13 @@ export default function App() {
           onOpenReaderPreview={() => setShowReaderPreview(true)}
           onOpenKeyboardShortcuts={() => setShowShortcutsModal(true)}
           onOpenGlobalSearch={() => setShowGlobalSearch(true)}
-          onToggleMobileOutline={() => setMobileOutlineOpen((prev) => !prev)}
+          onToggleMobileOutline={() => {
+            if (window.innerWidth < 1024) {
+              setMobileOutlineOpen((prev) => !prev);
+            } else {
+              setLeftTreeCollapsed((prev) => !prev);
+            }
+          }}
           isFocusMode={isFocusMode}
           onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
           settings={settings}
@@ -869,8 +877,8 @@ export default function App() {
         {activeView === 'manuscript' && (
           <>
             {/* Desktop Outline Tree (lg and up) */}
-            {!isFocusMode && (
-              <div className="hidden lg:flex h-full shrink-0">
+            {!isFocusMode && !leftTreeCollapsed && (
+              <div className="hidden lg:flex h-full shrink-0 border-r border-border/80">
                 <SidebarProjectTree
                   project={currentProject}
                   activeSceneId={activeSceneId}
@@ -884,7 +892,21 @@ export default function App() {
                   onRenameScene={handleRenameScene}
                   onRenameChapter={handleRenameChapter}
                   onRenameAct={handleRenameAct}
+                  onCollapseDesktop={() => setLeftTreeCollapsed(true)}
                 />
+              </div>
+            )}
+
+            {/* Desktop Mini collapsed rail for Immersive Zen Layout */}
+            {!isFocusMode && leftTreeCollapsed && (
+              <div className="hidden lg:flex flex-col items-center pt-4 w-12 border-r border-border/80 bg-card/60 shrink-0 select-none animate-in slide-in-from-left duration-200">
+                <button
+                  onClick={() => setLeftTreeCollapsed(false)}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 border border-border/40 transition-colors shadow-2xs hover:scale-105"
+                  title="Expand Outline Sidebar"
+                >
+                  <PanelLeft className="w-4 h-4" />
+                </button>
               </div>
             )}
 
@@ -1191,6 +1213,7 @@ export default function App() {
         <ReaderPreviewModal
           project={currentProject}
           onClose={() => setShowReaderPreview(false)}
+          settings={settings}
         />
       )}
 

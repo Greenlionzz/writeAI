@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan proposing Scrivener-style Corkboard view & Grammarly-style AI Co-Writer panel for WriteAI Studio.",
-  "updatedAt":  "2026-10-01T13:12:53.389774808Z",
+  "summary":  "Implementation plan to configure auto-closing for all header dropdown menus (Project Switcher, Export Menu, and Mobile More Menu) when clicking outside, using highly performant React refs and touch/mouse document listeners.",
+  "updatedAt":  "2026-10-01T17:14:08.981321417Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
