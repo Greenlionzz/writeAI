@@ -7,11 +7,12 @@ import {
   Calendar,
   Sparkles,
   Layers,
+  LayoutDashboard,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  activeView: 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
-  setActiveView: (view: 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
+  activeView: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
+  setActiveView: (view: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
   onToggleOutline: () => void;
@@ -27,7 +28,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   isOutlineOpen,
 }) => {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border/80 px-2 py-1 flex items-center justify-around shadow-lg select-none">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border/80 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,4px)+6px)] flex items-center justify-around shadow-lg select-none">
+      {/* 0. Dashboard */}
+      <button
+        onClick={() => {
+          setActiveView('dashboard');
+        }}
+        className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors min-w-[50px] ${
+          activeView === 'dashboard'
+            ? 'text-primary font-semibold'
+            : 'text-muted-foreground hover:text-foreground'
+        }`}
+      >
+        <LayoutDashboard className="w-4 h-4 mb-0.5" />
+        <span className="text-[10px] tracking-tight">Library</span>
+      </button>
       {/* 1. Manuscript Editor */}
       <button
         onClick={() => {

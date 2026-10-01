@@ -17,6 +17,7 @@ import {
   Coffee,
   Check,
   Keyboard,
+  LayoutDashboard,
   Maximize2,
   Minimize2,
   Search,
@@ -36,8 +37,8 @@ import { PDFExportModal } from './PDFExportModal';
 
 interface HeaderProps {
   project: Project;
-  activeView: 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
-  setActiveView: (view: 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
+  activeView: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
+  setActiveView: (view: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
   splitReferenceOpen: boolean;
@@ -89,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'manuscript', label: 'Manuscript', icon: BookOpen },
     { id: 'plotboard', label: 'Plot Board', icon: LayoutGrid },
     { id: 'characters', label: 'Characters', icon: Users },
@@ -115,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            setActiveView('manuscript');
+            setActiveView('dashboard');
           }}
           className="text-sm sm:text-base font-semibold tracking-tight text-foreground flex items-center gap-1 hover:opacity-90 shrink-0"
         >
@@ -130,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative min-w-0">
           <button
             onClick={() => setShowProjectsMenu(!showProjectsMenu)}
-            className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded-md hover:bg-accent transition-colors max-w-[90px] xs:max-w-[130px] sm:max-w-[170px] md:max-w-[210px] truncate"
+            className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded-md hover:bg-accent transition-colors max-w-[80px] xs:max-w-[110px] sm:max-w-[130px] xl:max-w-[210px] truncate"
             title={project.title}
           >
             <span className="truncate">{project.title}</span>
@@ -176,13 +178,13 @@ export const Header: React.FC<HeaderProps> = ({
         {savedStatus && (
           <span className="text-[11px] text-muted-foreground/80 flex items-center gap-1 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="hidden sm:inline">{savedStatus}</span>
+            <span className="hidden xl:inline">{savedStatus}</span>
           </span>
         )}
       </div>
 
       {/* Zone 2: Navigation Links (desktop) */}
-      <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40 shrink-0">
+      <nav className="hidden lg:flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40 shrink-0">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;
@@ -224,7 +226,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Reader Preview (desktop) */}
         <button
           onClick={onOpenReaderPreview}
-          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden md:flex"
+          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex"
           title="Reader Preview (Formatted Book Mode)"
         >
           <Eye className="w-4 h-4" />
@@ -248,7 +250,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Theme Switcher (desktop) */}
         <button
           onClick={toggleTheme}
-          className="px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden md:flex items-center gap-1.5 border border-border/40"
+          className="px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex items-center gap-1.5 border border-border/40"
           title={`Active Theme: ${settings.theme.toUpperCase()} (Click to toggle: Dark → Light → Sepia)`}
         >
           {settings.theme === 'dark' ? (
@@ -267,7 +269,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onToggleFocusMode && (
           <button
             onClick={onToggleFocusMode}
-            className={`px-2 py-1.5 rounded-md text-xs transition-colors border hidden sm:flex items-center gap-1.5 ${
+            className={`px-2 py-1.5 rounded-md text-xs transition-colors border hidden xl:flex items-center gap-1.5 ${
               isFocusMode
                 ? 'bg-primary text-primary-foreground border-primary shadow-xs font-semibold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted border-border/40'
@@ -281,12 +283,12 @@ export const Header: React.FC<HeaderProps> = ({
             {isFocusMode ? (
               <>
                 <Minimize2 className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-medium hidden lg:inline">Exit Focus</span>
+                <span className="text-[11px] font-medium hidden xl:inline">Exit Focus</span>
               </>
             ) : (
               <>
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-medium hidden lg:inline">Focus</span>
+                <span className="text-[11px] font-medium hidden xl:inline">Focus</span>
               </>
             )}
           </button>
@@ -296,7 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenKeyboardShortcuts && (
           <button
             onClick={onOpenKeyboardShortcuts}
-            className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40 hidden lg:flex"
+            className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40 hidden xl:flex"
             title="Keyboard Shortcuts Cheat Sheet (Ctrl+/)"
           >
             <Keyboard className="w-3.5 h-3.5" />
@@ -421,14 +423,14 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Settings button (desktop) */}
         <button
           onClick={onOpenSettings}
-          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden sm:flex"
+          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden xl:flex"
           title="Settings & Gemini API Key"
         >
           <Settings className="w-4 h-4" />
         </button>
 
         {/* Mobile Overflow Menu Button (mobile only) */}
-        <div className="relative md:hidden">
+        <div className="relative xl:hidden">
           <button
             onClick={() => setShowMobileMoreMenu(!showMobileMoreMenu)}
             className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40"

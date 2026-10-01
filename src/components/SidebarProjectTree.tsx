@@ -26,6 +26,8 @@ interface SidebarProjectTreeProps {
   onDeleteChapter?: (chapterId: string) => void;
   onDeleteAct?: (actId: string) => void;
   onRenameScene: (sceneId: string, newTitle: string) => void;
+  onRenameChapter?: (chapterId: string, newTitle: string) => void;
+  onRenameAct?: (actId: string, newTitle: string) => void;
   onCloseMobile?: () => void;
 }
 
@@ -40,6 +42,8 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
   onDeleteChapter,
   onDeleteAct,
   onRenameScene,
+  onRenameChapter,
+  onRenameAct,
   onCloseMobile,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +51,12 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
   const [collapsedChapters, setCollapsedChapters] = useState<Record<string, boolean>>({});
   const [editingSceneId, setEditingSceneId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+
+  const [editingActId, setEditingActId] = useState<string | null>(null);
+  const [editActTitle, setEditActTitle] = useState('');
+
+  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
+  const [editChapterTitle, setEditChapterTitle] = useState('');
 
   const toggleAct = (actId: string) => {
     setCollapsedActs((prev) => ({ ...prev, [actId]: !prev[actId] }));
@@ -66,6 +76,30 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
       onRenameScene(sceneId, editTitle.trim());
     }
     setEditingSceneId(null);
+  };
+
+  const startRenameAct = (actId: string, currentTitle: string) => {
+    setEditingActId(actId);
+    setEditActTitle(currentTitle);
+  };
+
+  const saveRenameAct = (actId: string) => {
+    if (editActTitle.trim() && onRenameAct) {
+      onRenameAct(actId, editActTitle.trim());
+    }
+    setEditingActId(null);
+  };
+
+  const startRenameChapter = (chapterId: string, currentTitle: string) => {
+    setEditingChapterId(chapterId);
+    setEditChapterTitle(currentTitle);
+  };
+
+  const saveRenameChapter = (chapterId: string) => {
+    if (editChapterTitle.trim() && onRenameChapter) {
+      onRenameChapter(chapterId, editChapterTitle.trim());
+    }
+    setEditingChapterId(null);
   };
 
   // Compute total project words
@@ -157,39 +191,64 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
                 <div key={act.id} className="pl-1.5 space-y-0.5">
                   {/* Act Header */}
                   <div className="group flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium text-foreground hover:bg-muted/40 transition-colors">
-                    <button
-                      onClick={() => toggleAct(act.id)}
-                      className="flex items-center gap-1 text-left flex-1 min-w-0"
-                    >
-                      {isActCollapsed ? (
-                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                      )}
-                      <Layers className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="truncate text-xs font-medium">{act.title}</span>
-                    </button>
-                    <div className="flex items-center gap-0.5 shrink-0">
+                    {editingActId === act.id ? (
+                      <input
+                        type="text"
+                        value={editActTitle}
+                        onChange={(e) => setEditActTitle(e.target.value)}
+                        onBlur={() => saveRenameAct(act.id)}
+                        onKeyDown={(e) => e.key === 'Enter' && saveRenameAct(act.id)}
+                        autoFocus
+                        className="ml-5 flex-1 bg-card border border-border px-1 py-0.5 rounded text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <button
+                        onClick={() => toggleAct(act.id)}
+                        className="flex items-center gap-1 text-left flex-1 min-w-0"
+                      >
+                        {isActCollapsed ? (
+                          <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                        )}
+                        <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="truncate text-xs font-medium">{act.title}</span>
+                      </button>
+                    )}
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onAddChapter(act.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-opacity"
+                        className="p-1 rounded hover:bg-muted text-muted-foreground/70 hover:text-foreground transition-colors"
                         title="Add Chapter to Act"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
+                      {onRenameAct && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRenameAct(act.id, act.title);
+                          }}
+                          className="p-1 rounded hover:bg-muted text-muted-foreground/70 hover:text-foreground transition-colors"
+                          title="Rename Act"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      )}
                       {onDeleteAct && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onDeleteAct(act.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-opacity"
+                          className="p-1 rounded hover:bg-destructive/15 text-muted-foreground/70 hover:text-destructive transition-colors"
                           title="Delete Act"
                         >
-                          <Trash2 className="w-2.5 h-2.5" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
                       )}
                     </div>
@@ -204,39 +263,64 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
                           <div key={chapter.id} className="space-y-0.5">
                             {/* Chapter Header */}
                             <div className="group flex items-center justify-between px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors">
-                              <button
-                                onClick={() => toggleChapter(chapter.id)}
-                                className="flex items-center gap-1 text-left flex-1 min-w-0"
-                              >
-                                {isChapterCollapsed ? (
-                                  <ChevronRight className="w-2.5 h-2.5" />
-                                ) : (
-                                  <ChevronDown className="w-2.5 h-2.5" />
-                                )}
-                                <Folder className="w-3 h-3 text-muted-foreground/80" />
-                                <span className="truncate">{chapter.title}</span>
-                              </button>
-                              <div className="flex items-center gap-0.5 shrink-0">
+                              {editingChapterId === chapter.id ? (
+                                <input
+                                  type="text"
+                                  value={editChapterTitle}
+                                  onChange={(e) => setEditChapterTitle(e.target.value)}
+                                  onBlur={() => saveRenameChapter(chapter.id)}
+                                  onKeyDown={(e) => e.key === 'Enter' && saveRenameChapter(chapter.id)}
+                                  autoFocus
+                                  className="ml-4 flex-1 bg-card border border-border px-1 py-0.5 rounded text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                <button
+                                  onClick={() => toggleChapter(chapter.id)}
+                                  className="flex items-center gap-1 text-left flex-1 min-w-0"
+                                >
+                                  {isChapterCollapsed ? (
+                                    <ChevronRight className="w-2.5 h-2.5" />
+                                  ) : (
+                                    <ChevronDown className="w-2.5 h-2.5" />
+                                  )}
+                                  <Folder className="w-3 h-3 text-muted-foreground/80" />
+                                  <span className="truncate">{chapter.title}</span>
+                                </button>
+                              )}
+                              <div className="flex items-center gap-1 shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onAddScene(chapter.id);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-opacity"
+                                  className="p-1 rounded hover:bg-muted text-muted-foreground/75 hover:text-foreground transition-colors"
                                   title="Add Scene"
                                 >
-                                  <Plus className="w-3 h-3" />
+                                  <Plus className="w-3.5 h-3.5" />
                                 </button>
+                                {onRenameChapter && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startRenameChapter(chapter.id, chapter.title);
+                                    }}
+                                    className="p-1 rounded hover:bg-muted text-muted-foreground/75 hover:text-foreground transition-colors"
+                                    title="Rename Chapter"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                )}
                                 {onDeleteChapter && (
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       onDeleteChapter(chapter.id);
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-opacity"
+                                    className="p-1 rounded hover:bg-destructive/15 text-muted-foreground/75 hover:text-destructive transition-colors"
                                     title="Delete Chapter"
                                   >
-                                    <Trash2 className="w-2.5 h-2.5" />
+                                    <Trash2 className="w-3 h-3" />
                                   </button>
                                 )}
                               </div>
@@ -299,7 +383,7 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
                                             {scene.wordCount || 0}w
                                           </span>
 
-                                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
+                                          <div className="flex items-center gap-1 transition-colors">
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();

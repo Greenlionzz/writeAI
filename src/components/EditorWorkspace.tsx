@@ -86,10 +86,20 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
   const isFocusMode = propIsFocusMode !== undefined ? propIsFocusMode : internalFocusMode;
   const toggleFocusMode = onToggleFocusMode || (() => setInternalFocusMode((prev) => !prev));
 
-  // Compute live readability analysis for current scene
-  const readabilityAnalysis = useMemo(() => {
-    return analyzeReadability(scene?.content || '');
+  // Debounce expensive readability analysis to prevent main thread stutters while typing
+  const [debouncedContent, setDebouncedContent] = useState(scene?.content || '');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedContent(scene?.content || '');
+    }, 1000);
+    return () => clearTimeout(handler);
   }, [scene?.content]);
+
+  // Compute live readability analysis for current scene based on debounced content
+  const readabilityAnalysis = useMemo(() => {
+    return analyzeReadability(debouncedContent);
+  }, [debouncedContent]);
 
   // Daily writing goal metrics based on settings
   const dailyGoal = dailyWordGoal || settings.dailyWordGoal || 1000;
@@ -287,7 +297,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
 
   return (
     <div
-      className={`flex-1 flex flex-col h-full bg-background transition-colors ${
+      className={`flex-1 flex flex-col min-h-0 bg-background transition-colors ${
         isFocusMode ? 'fixed inset-0 z-50 p-6 bg-background' : ''
       }`}
     >
@@ -507,7 +517,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 sm:py-8 pb-20 md:pb-8 flex justify-center selection:bg-primary/20 relative">
         {/* Floating Focus Mode Banner */}
         {isFocusMode && (
-          <div className="fixed top-14 right-4 sm:right-6 z-30 flex items-center">
+          <div className="fixed top-4 right-4 sm:right-6 z-30 flex items-center">
             <div className="bg-card/90 backdrop-blur-xs border border-border/80 px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2.5 text-xs animate-in fade-in duration-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="font-semibold text-foreground text-[11px]">Focus Mode</span>

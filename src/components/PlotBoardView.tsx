@@ -196,23 +196,23 @@ export const PlotBoardView: React.FC<PlotBoardViewProps> = ({
                         </h4>
                       </div>
 
-                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1.5 transition-colors">
                         <button
                           onClick={() => {
                             setEditingCard(card);
                             setIsModalOpen(true);
                           }}
-                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                          className="p-1.5 rounded-lg border border-border/80 bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-2xs"
                           title="Edit Card"
                         >
-                          <Edit2 className="w-3 h-3" />
+                          <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteCard(card.id)}
-                          className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                          className="p-1.5 rounded-lg border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/20 hover:bg-destructive/10 transition-colors shadow-2xs"
                           title="Delete Card"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

@@ -28,6 +28,8 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { CorkboardView } from './components/CorkboardView';
 import { StyleCritiquePanel } from './components/StyleCritiquePanel';
 
+import { DashboardView } from './components/DashboardView';
+
 export default function App() {
   const [projects, setProjects] = useState<Project[]>(() => loadProjects());
   const [activeProjectId, setActiveId] = useState<string>(() =>
@@ -37,8 +39,8 @@ export default function App() {
 
   // Views & Panels
   const [activeView, setActiveView] = useState<
-    'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule'
-  >('manuscript');
+    'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule'
+  >('dashboard');
   const [splitReferenceOpen, setSplitReferenceOpen] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showStyleCritiquePanel, setShowStyleCritiquePanel] = useState(false);
@@ -513,6 +515,29 @@ export default function App() {
     updateProject({ ...currentProject, books: updatedBooks });
   };
 
+  // Rename Chapter
+  const handleRenameChapter = (chapterId: string, newTitle: string) => {
+    if (!currentProject) return;
+    const updatedBooks = currentProject.books.map((b) => ({
+      ...b,
+      acts: b.acts.map((a) => ({
+        ...a,
+        chapters: a.chapters.map((c) => (c.id === chapterId ? { ...c, title: newTitle } : c)),
+      })),
+    }));
+    updateProject({ ...currentProject, books: updatedBooks });
+  };
+
+  // Rename Act
+  const handleRenameAct = (actId: string, newTitle: string) => {
+    if (!currentProject) return;
+    const updatedBooks = currentProject.books.map((b) => ({
+      ...b,
+      acts: b.acts.map((a) => (a.id === actId ? { ...a, title: newTitle } : a)),
+    }));
+    updateProject({ ...currentProject, books: updatedBooks });
+  };
+
   // Update Scene Synopsis from Corkboard
   const handleUpdateSceneSynopsis = (sceneId: string, synopsis: string) => {
     if (!currentProject) return;
@@ -734,6 +759,7 @@ export default function App() {
   const handleSelectProject = (id: string) => {
     setActiveId(id);
     setActiveProjectId(id);
+    setActiveView('manuscript');
   };
 
   const handleCreateNewProject = (newProj: Project) => {
@@ -744,6 +770,7 @@ export default function App() {
     setActiveProjectId(newProj.id);
     const firstScene = newProj.books[0]?.acts[0]?.chapters[0]?.scenes[0];
     if (firstScene) setActiveSceneId(firstScene.id);
+    setActiveView('manuscript');
   };
 
   const handleImportProject = (imported: Project) => {
@@ -752,11 +779,30 @@ export default function App() {
     saveProjects(nextList);
     setActiveId(imported.id);
     setActiveProjectId(imported.id);
+    setActiveView('manuscript');
+  };
+
+  const handleDeleteProject = (id: string) => {
+    if (projects.length <= 1) {
+      alert("You must have at least one project in your library!");
+      return;
+    }
+    const nextList = projects.filter((p) => p.id !== id);
+    setProjects(nextList);
+    saveProjects(nextList);
+
+    if (activeProjectId === id) {
+      const nextActive = nextList[0];
+      setActiveId(nextActive.id);
+      setActiveProjectId(nextActive.id);
+      const firstScene = nextActive.books[0]?.acts[0]?.chapters[0]?.scenes[0];
+      if (firstScene) setActiveSceneId(firstScene.id);
+    }
   };
 
   if (!currentProject) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground">
+      <div className="h-[100dvh] w-screen flex items-center justify-center bg-background text-foreground">
         Loading WriteAI Studio...
       </div>
     );
@@ -769,38 +815,56 @@ export default function App() {
   const effectiveDailyGoal = settings.dailyWordGoal || currentProject.dailyWordGoal || 1000;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
-      {/* Top Header */}
-      <Header
-        project={currentProject}
-        activeView={activeView}
-        setActiveView={setActiveView}
-        showAIPanel={showAIPanel}
-        setShowAIPanel={setShowAIPanel}
-        splitReferenceOpen={splitReferenceOpen}
-        setSplitReferenceOpen={setSplitReferenceOpen}
-        onOpenSettings={() => setShowSettingsModal(true)}
-        onOpenProjectLibrary={() => {
-          setProjectModalMode('welcome');
-          setShowProjectModal(true);
-        }}
-        onNewProject={() => {
-          setProjectModalMode('new');
-          setShowProjectModal(true);
-        }}
-        onOpenReaderPreview={() => setShowReaderPreview(true)}
-        onOpenKeyboardShortcuts={() => setShowShortcutsModal(true)}
-        onOpenGlobalSearch={() => setShowGlobalSearch(true)}
-        onToggleMobileOutline={() => setMobileOutlineOpen((prev) => !prev)}
-        isFocusMode={isFocusMode}
-        onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
-        settings={settings}
-        onUpdateSettings={setSettings}
-        savedStatus={savedStatus}
-      />
+    <div className="h-[100dvh] w-screen flex flex-col bg-background text-foreground overflow-hidden">
+      {/* Top Header - Hidden in Focus Mode for absolute Full Screen */}
+      {!isFocusMode && (
+        <Header
+          project={currentProject}
+          activeView={activeView}
+          setActiveView={setActiveView}
+          showAIPanel={showAIPanel}
+          setShowAIPanel={setShowAIPanel}
+          splitReferenceOpen={splitReferenceOpen}
+          setSplitReferenceOpen={setSplitReferenceOpen}
+          onOpenSettings={() => setShowSettingsModal(true)}
+          onOpenProjectLibrary={() => {
+            setProjectModalMode('welcome');
+            setShowProjectModal(true);
+          }}
+          onNewProject={() => {
+            setProjectModalMode('new');
+            setShowProjectModal(true);
+          }}
+          onOpenReaderPreview={() => setShowReaderPreview(true)}
+          onOpenKeyboardShortcuts={() => setShowShortcutsModal(true)}
+          onOpenGlobalSearch={() => setShowGlobalSearch(true)}
+          onToggleMobileOutline={() => setMobileOutlineOpen((prev) => !prev)}
+          isFocusMode={isFocusMode}
+          onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
+          settings={settings}
+          onUpdateSettings={setSettings}
+          savedStatus={savedStatus}
+        />
+      )}
 
       {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden relative">
+        {/* VIEW 0: DASHBOARD */}
+        {activeView === 'dashboard' && (
+          <DashboardView
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSelectProject={handleSelectProject}
+            onCreateNewProject={() => {
+              setProjectModalMode('new');
+              setShowProjectModal(true);
+            }}
+            onImportProject={handleImportProject}
+            onDeleteProject={handleDeleteProject}
+            settings={settings}
+          />
+        )}
+
         {/* VIEW 1: MANUSCRIPT EDITOR (Tree + Editor + Split Reference + AI) */}
         {activeView === 'manuscript' && (
           <>
@@ -818,6 +882,8 @@ export default function App() {
                   onDeleteChapter={handleDeleteChapter}
                   onDeleteAct={handleDeleteAct}
                   onRenameScene={handleRenameScene}
+                  onRenameChapter={handleRenameChapter}
+                  onRenameAct={handleRenameAct}
                 />
               </div>
             )}
@@ -844,6 +910,8 @@ export default function App() {
                     onDeleteChapter={handleDeleteChapter}
                     onDeleteAct={handleDeleteAct}
                     onRenameScene={handleRenameScene}
+                    onRenameChapter={handleRenameChapter}
+                    onRenameAct={handleRenameAct}
                     onCloseMobile={() => setMobileOutlineOpen(false)}
                   />
                 </div>
@@ -1066,7 +1134,7 @@ export default function App() {
 
         {/* VIEW 2: PLOT BOARD */}
         {activeView === 'plotboard' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden pb-14 md:pb-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-16 lg:pb-0">
             <PlotBoardView
               project={currentProject}
               onUpdateProject={updateProject}
@@ -1077,7 +1145,7 @@ export default function App() {
 
         {/* VIEW 3: CHARACTERS BIBLE */}
         {activeView === 'characters' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden pb-14 md:pb-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-16 lg:pb-0">
             <CharactersView
               project={currentProject}
               onUpdateProject={updateProject}
@@ -1087,7 +1155,7 @@ export default function App() {
 
         {/* VIEW 4: LOCATIONS & SETTINGS */}
         {activeView === 'locations' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden pb-14 md:pb-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-16 lg:pb-0">
             <LocationsView
               project={currentProject}
               onUpdateProject={updateProject}
@@ -1097,7 +1165,7 @@ export default function App() {
 
         {/* VIEW 5: SCHEDULE & VELOCITY */}
         {activeView === 'schedule' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden pb-14 md:pb-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-16 lg:pb-0">
             <ScheduleView
               project={currentProject}
               onUpdateProject={updateProject}

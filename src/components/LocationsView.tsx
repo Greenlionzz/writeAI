@@ -142,25 +142,25 @@ export const LocationsView: React.FC<LocationsViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        setEditingLoc(loc);
-                        setIsModalOpen(true);
-                      }}
-                      className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                      title="Edit Location"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLoc(loc.id)}
-                      className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                      title="Delete Location"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-1.5 transition-colors">
+                      <button
+                        onClick={() => {
+                          setEditingLoc(loc);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-1.5 rounded-lg border border-border/80 bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-2xs"
+                        title="Edit Location"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteLoc(loc.id)}
+                        className="p-1.5 rounded-lg border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/20 hover:bg-destructive/10 transition-colors shadow-2xs"
+                        title="Delete Location"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                 </div>
 
                 {loc.eraOrClimate && (
