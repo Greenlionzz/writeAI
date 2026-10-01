@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Project, PlotCard, UserSettings, Book, Act, Chapter, Scene } from '../types/writing';
+import { apiUrl } from '../services/api';
 
 interface AIOutlineGeneratorModalProps {
   isOpen: boolean;
@@ -150,7 +151,7 @@ export const AIOutlineGeneratorModal: React.FC<AIOutlineGeneratorModalProps> = (
         customFocus: customFocus.trim(),
       };
 
-      const res = await fetch('/api/ai/outline', {
+      const res = await fetch(apiUrl('/api/ai/outline'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

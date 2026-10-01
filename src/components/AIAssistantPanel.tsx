@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Project, Scene, UserSettings, AIActionType, AIResponsePayload } from '../types/writing';
+import { apiUrl } from '../services/api';
 
 interface AIAssistantPanelProps {
   project: Project;
@@ -147,7 +148,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
         },
       };
 
-      const res = await fetch('/api/ai/action', {
+      const res = await fetch(apiUrl('/api/ai/action'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

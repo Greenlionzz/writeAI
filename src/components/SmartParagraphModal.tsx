@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Scene, UserSettings } from '../types/writing';
+import { apiUrl } from '../services/api';
 
 interface SmartParagraphModalProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export const SmartParagraphModal: React.FC<SmartParagraphModalProps> = ({
         : 'Balanced Immersive Novel Novel Pacing';
 
     try {
-      const res = await fetch('/api/ai/smart-paragraph', {
+      const res = await fetch(apiUrl('/api/ai/smart-paragraph'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

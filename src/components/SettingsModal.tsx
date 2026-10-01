@@ -15,6 +15,7 @@ import {
   Target,
 } from 'lucide-react';
 import { UserSettings } from '../types/writing';
+import { apiUrl } from '../services/api';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
     try {
       const activeModel = customModel.trim() || selectedModel;
-      const res = await fetch('/api/ai/test-key', {
+      const res = await fetch(apiUrl('/api/ai/test-key'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

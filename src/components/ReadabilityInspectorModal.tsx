@@ -26,6 +26,7 @@ import {
   SentenceAnalysis,
   SimplificationSuggestion,
 } from '../utils/readability';
+import { apiUrl } from '../services/api';
 
 interface ReadabilityInspectorModalProps {
   isOpen: boolean;
@@ -100,7 +101,7 @@ export const ReadabilityInspectorModal: React.FC<
     setAiLoadingSentenceIndex(sentence.index);
 
     try {
-      const res = await fetch('/api/ai/simplify-sentence', {
+      const res = await fetch(apiUrl('/api/ai/simplify-sentence'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

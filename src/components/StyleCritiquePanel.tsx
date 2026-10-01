@@ -12,6 +12,7 @@ import {
   Target,
 } from 'lucide-react';
 import { Scene, UserSettings } from '../types/writing';
+import { apiUrl } from '../services/api';
 
 interface Suggestion {
   originalText: string;
@@ -47,7 +48,7 @@ export const StyleCritiquePanel: React.FC<StyleCritiquePanelProps> = ({
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch('/api/ai/prose-style', {
+      const res = await fetch(apiUrl('/api/ai/prose-style'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
