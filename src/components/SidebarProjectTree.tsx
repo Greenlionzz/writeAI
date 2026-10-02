@@ -12,6 +12,7 @@ import {
   Edit2,
   Book,
   X,
+  PanelLeftClose,
 } from 'lucide-react';
 import { Project, Book as BookType, Act, Chapter, Scene } from '../types/writing';
 
@@ -135,34 +136,39 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-72 border-r border-border bg-card flex flex-col shrink-0 select-none overflow-hidden h-full shadow-lg lg:shadow-none">
+    <aside className="w-full min-w-0 lg:w-72 border-r border-border/80 bg-card flex flex-col shrink-0 select-none overflow-hidden h-full shadow-lg lg:shadow-none">
       {/* Desktop Top Header (only on desktop screens) */}
       {!onCloseMobile && onCollapseDesktop && (
-        <div className="hidden lg:flex p-3 border-b border-border flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-            <Layers className="w-4 h-4 text-primary" />
-            <span>Manuscript Outline</span>
+        <div className="hidden lg:flex px-3 py-3 border-b border-border/70 items-center justify-between bg-card shrink-0">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Layers className="h-4 w-4" />
+            </span>
+            <span>Manuscript outline</span>
           </div>
           <button
             onClick={onCollapseDesktop}
-            className="px-2 py-1 rounded-md text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted border border-border/60 transition-all shadow-3xs"
+            className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             title="Collapse Sidebar"
+            aria-label="Collapse outline sidebar"
           >
-            ◀ Collapse
+            <PanelLeftClose className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {/* Mobile Top Header (only on mobile) */}
       {onCloseMobile && (
-        <div className="lg:hidden p-3 border-b border-border flex items-center justify-between bg-card shrink-0">
-          <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-            <Layers className="w-4 h-4 text-primary" />
-            <span>Manuscript Outline</span>
+        <div className="lg:hidden px-3 py-3 border-b border-border/70 flex items-center justify-between bg-card shrink-0">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Layers className="h-4 w-4" />
+            </span>
+            <span>Manuscript outline</span>
           </div>
           <button
             onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             title="Close Outline Drawer"
           >
             <X className="w-4 h-4" />
@@ -171,7 +177,7 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
       )}
 
       {/* Search Bar */}
-      <div className="p-2.5 border-b border-border/60">
+      <div className="border-b border-border/70 bg-card px-3 py-3">
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
           <input
@@ -179,24 +185,24 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search manuscript scenes..."
-            className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-md bg-muted/50 border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground placeholder:text-muted-foreground/60"
+            className="w-full rounded-md border border-border/70 bg-background pl-8 pr-2.5 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
       </div>
 
       {/* Tree Content */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-3">
+      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
         {project.books.map((book) => (
           <div key={book.id} className="space-y-1">
             {/* Book Header */}
-            <div className="px-2 py-1 flex items-center justify-between text-xs font-semibold text-foreground/90 tracking-wide">
+            <div className="flex items-center justify-between gap-2 border-b border-border/60 px-2 pb-2 text-xs font-semibold text-foreground">
               <span className="flex items-center gap-1.5 truncate">
                 <Book className="w-3.5 h-3.5 text-primary" />
                 <span className="truncate">{book.title}</span>
               </span>
               <button
                 onClick={() => onAddAct(book.id)}
-                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 title="Add Act"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -209,7 +215,7 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
               return (
                 <div key={act.id} className="pl-1.5 space-y-0.5">
                   {/* Act Header */}
-                  <div className="group flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium text-foreground hover:bg-muted/40 transition-colors">
+                  <div className="group flex items-center justify-between rounded-md px-2 py-1.5 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors">
                     {editingActId === act.id ? (
                       <input
                         type="text"
@@ -368,10 +374,10 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
                                             onCloseMobile?.();
                                           }
                                         }}
-                                        className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
+                                        className={`group relative flex items-center justify-between border-l-2 px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
                                           isActive
-                                            ? 'bg-primary/10 text-primary font-medium'
-                                            : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
+                                            ? 'border-primary bg-primary/10 text-primary font-medium'
+                                            : 'border-transparent text-foreground/80 hover:bg-muted/60 hover:text-foreground'
                                         }`}
                                       >
                                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -398,7 +404,7 @@ export const SidebarProjectTree: React.FC<SidebarProjectTreeProps> = ({
                                         </div>
 
                                         <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                                          <span className="text-[10px] text-muted-foreground tabular-nums">
+                                          <span className="rounded bg-muted/70 px-1.5 py-0.5 text-[10px] text-muted-foreground tabular-nums">
                                             {scene.wordCount || 0}w
                                           </span>
 

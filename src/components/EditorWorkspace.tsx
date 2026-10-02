@@ -358,13 +358,13 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
 
   return (
     <div
-      className={`flex-1 flex flex-col min-h-0 bg-background transition-colors ${
+      className={`flex-1 flex flex-col min-h-0 min-w-0 bg-background transition-colors ${
         isFocusMode ? 'fixed inset-0 z-50 p-6 bg-background' : ''
       }`}
     >
       {/* Top Toolbar */}
-      <div className="h-10 border-b border-border/80 bg-card/60 px-2 sm:px-3 flex items-center justify-between shrink-0 select-none">
-        <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-1 scrollbar-none">
+      <div role="toolbar" aria-label="Manuscript editing tools" className="min-h-12 border-b border-border/80 bg-card px-2 py-1.5 sm:px-3 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
+        <div className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1 overflow-x-auto rounded-lg border border-border/60 bg-muted/30 px-1 py-0.5 scrollbar-none">
           {/* Undo / Redo */}
           <button
             onClick={handleUndo}
@@ -483,7 +483,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {/* Daily Goal Circular Progress Ring */}
           <div
             onClick={onOpenSettings}
@@ -651,7 +651,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
       )}
 
       {/* Manuscript Canvas Container */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 sm:py-8 pb-20 md:pb-8 flex justify-center selection:bg-primary/20 relative">
+      <div className="flex-1 overflow-y-auto bg-muted/20 px-2 sm:px-4 py-4 sm:py-8 pb-20 md:pb-8 flex justify-center selection:bg-primary/20 relative">
         {/* Floating Focus Mode Banner */}
         {isFocusMode && (
           <div className="fixed top-4 right-4 sm:right-6 z-30 flex items-center">
@@ -672,7 +672,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
 
         <div className={`w-full transition-all duration-300 flex flex-col ${isFocusMode ? 'max-w-4xl' : 'max-w-3xl'}`}>
           {/* Manuscript Sheet Elevation */}
-          <div className="w-full bg-card border border-border/80 rounded-lg sm:rounded-xl p-4 sm:p-6 md:p-10 lg:p-12 shadow-xs transition-colors flex flex-col flex-1 min-h-[480px] sm:min-h-[600px] md:min-h-[720px]">
+          <div className="w-full bg-card border border-border/70 rounded-md p-4 sm:p-6 md:p-10 lg:p-12 shadow-sm transition-colors flex flex-col flex-1 min-h-[480px] sm:min-h-[600px] md:min-h-[720px]">
             {/* Chapter / Scene Heading */}
             <div className="border-b border-border/50 pb-5 mb-6 select-none">
               <div className="flex items-center justify-between text-xs text-muted-foreground">

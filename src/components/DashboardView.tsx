@@ -9,17 +9,14 @@ import {
   Sparkles,
   Clock,
   TrendingUp,
-  Compass,
   Trophy,
   Layers,
   ArrowRight,
-  FileText,
   AlertCircle,
   X,
   Users,
   GitCommit,
   CheckCircle,
-  HelpCircle,
   User,
 } from 'lucide-react';
 import { Project, UserSettings, Character, PlotCard } from '../types/writing';
@@ -154,7 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
 
     return (
-      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+      <div className="bg-card border border-border/80 rounded-lg p-5 shadow-2xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -221,7 +218,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const cards = [...(activeProject.plotCards || [])].sort((a, b) => a.order - b.order);
 
     return (
-      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+      <div className="bg-card border border-border/80 rounded-lg p-5 shadow-2xs">
         <div className="mb-4">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
             <GitCommit className="w-4 h-4 text-indigo-500" />
@@ -285,7 +282,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const cast = activeProject.characters || [];
 
     return (
-      <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
+      <div className="bg-card border border-border/80 rounded-lg p-5 shadow-2xs">
         <div className="flex items-center justify-between mb-3.5">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -335,296 +332,172 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background/50 selection:bg-primary/20">
-      {/* 1. Hero Welcome & Inspiration Banner */}
-      <div className="relative px-4 sm:px-8 pt-8 pb-12 overflow-hidden bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-transparent border-b border-border/40">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+    <div className="flex-1 overflow-y-auto bg-background selection:bg-primary/20">
+      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+        <header className="flex flex-col gap-6 border-b border-border/80 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              <span>Studio Workspace Dashboard</span>
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground">
+              <BookOpen className="h-4 w-4 text-primary" />
+              <span>WriteAI</span>
+              <span className="text-border">/</span>
+              <span>Writing studio</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-serif leading-tight">
-              Welcome back, Writer.
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-relaxed">
-              Your stories are waiting. Open an ongoing manuscript below to continue sculpting your worlds, or start a clean project to capture a fresh spark of inspiration.
+            <h1 className="font-serif text-3xl leading-tight text-foreground sm:text-4xl">Your writing desk</h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Pick up where you left off, or make room for a new story.
             </p>
           </div>
-
-          <div className="md:max-w-xs shrink-0 bg-card/60 backdrop-blur-xs border border-border/80 rounded-xl p-4 shadow-xs">
-            <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
-              Daily Inspiration
-            </span>
-            <p className="text-xs italic text-muted-foreground leading-relaxed font-serif">
-              "{quote.text}"
-            </p>
-            <span className="text-[10px] font-semibold text-foreground/80 mt-1.5 block text-right">
-              — {quote.author}
-            </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImportChange}
+              accept=".json"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3.5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+              title="Import project from a JSON backup"
+            >
+              <Upload className="h-4 w-4" />
+              Import
+            </button>
+            <button
+              onClick={onCreateNewProject}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              New project
+            </button>
           </div>
-        </div>
-      </div>
+        </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
-        {/* 2. Global Library Statistics Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs">
-            <div className="flex items-center gap-2.5 text-muted-foreground mb-1.5">
-              <FolderOpen className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-semibold">Total Projects</span>
+        <section aria-label="Library overview" className="grid grid-cols-2 border-b border-border/80 py-5 md:grid-cols-4">
+          <div className="border-r border-border/70 py-2 pr-4 md:px-5 md:first:pl-0">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <FolderOpen className="h-4 w-4 text-sky-600" /> Projects
             </div>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight leading-none">
-              {projects.length}
-            </span>
-            <span className="text-[10px] text-muted-foreground block mt-1">In local storage library</span>
+            <p className="text-2xl font-semibold tabular-nums text-foreground">{projects.length}</p>
           </div>
-
-          <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs">
-            <div className="flex items-center gap-2.5 text-muted-foreground mb-1.5">
-              <BookOpen className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs font-semibold">Manuscript Words</span>
+          <div className="py-2 pl-4 md:border-r md:border-border/70 md:px-5">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <BookOpen className="h-4 w-4 text-emerald-700" /> Manuscript words
             </div>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight leading-none">
-              {globalTotalWords.toLocaleString()}
-            </span>
-            <span className="text-[10px] text-muted-foreground block mt-1">Across all project drafts</span>
+            <p className="text-2xl font-semibold tabular-nums text-foreground">{globalTotalWords.toLocaleString()}</p>
           </div>
-
-          <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs">
-            <div className="flex items-center gap-2.5 text-muted-foreground mb-1.5">
-              <Layers className="w-4 h-4 text-purple-500" />
-              <span className="text-xs font-semibold">Draft Scenes</span>
+          <div className="border-r border-border/70 py-2 pr-4 md:border-r md:px-5">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Layers className="h-4 w-4 text-amber-700" /> Draft scenes
             </div>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight leading-none">
-              {globalTotalScenes}
-            </span>
-            <span className="text-[10px] text-muted-foreground block mt-1">Fully mapped & outlined</span>
+            <p className="text-2xl font-semibold tabular-nums text-foreground">{globalTotalScenes}</p>
           </div>
-
-          <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs">
-            <div className="flex items-center gap-2.5 text-muted-foreground mb-1.5">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span className="text-xs font-semibold">Creative Streak</span>
+          <div className="py-2 pl-4 md:px-5 md:pr-0">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Trophy className="h-4 w-4 text-rose-700" /> Daily word goal
             </div>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight leading-none flex items-center gap-1.5">
-              <span>{settings.dailyWordGoal ? 'Active' : 'Ready'}</span>
-            </span>
-            <span className="text-[10px] text-muted-foreground block mt-1">
-              Goal: {settings.dailyWordGoal || 1000}w daily
-            </span>
+            <p className="text-2xl font-semibold tabular-nums text-foreground">{(settings.dailyWordGoal || 1000).toLocaleString()}</p>
           </div>
-        </div>
+        </section>
 
-        {/* Dynamic Activity and Visual Beats Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-          <div className="lg:col-span-2 flex flex-col gap-5">
-            {renderHeatmap()}
-            {renderPlotlineTimeline()}
-          </div>
-          <div>
-            {renderCharacterGallery()}
-          </div>
-        </div>
-
-        {/* 3. Main Project Library Grid */}
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-5">
+        <div className="grid gap-9 py-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-12">
+          <section>
+            <div className="mb-4 flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-foreground tracking-tight">Your Project Library</h2>
-                <p className="text-xs text-muted-foreground">Select a manuscript to enter the writing studio workspace.</p>
+                <h2 className="font-serif text-2xl text-foreground">Project library</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{projects.length} {projects.length === 1 ? 'manuscript' : 'manuscripts'} in your workspace</p>
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileImportChange}
-                  accept=".json"
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-card text-xs font-medium text-muted-foreground hover:text-foreground transition-all shadow-2xs"
-                  title="Import project from an existing JSON backup file"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Import Backup</span>
-                </button>
-                <button
-                  onClick={onCreateNewProject}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all shadow-xs"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>New Project</span>
-                </button>
-              </div>
+              {activeProject && <span className="hidden text-xs text-muted-foreground sm:inline">Currently active: <strong className="font-semibold text-foreground">{activeProject.title}</strong></span>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {projects.map((proj) => {
-                const wordsCount = getProjectWords(proj);
-                const targetCount = proj.targetWordCount || 80000;
-                const progressPercent = Math.min(100, Math.round((wordsCount / targetCount) * 100));
-                const isActive = proj.id === activeProjectId;
+            {projects.length === 0 ? (
+              <div className="flex min-h-56 flex-col items-center justify-center border border-dashed border-border bg-card/50 px-6 text-center">
+                <BookOpen className="mb-3 h-6 w-6 text-muted-foreground" />
+                <h3 className="font-serif text-lg text-foreground">Start with a blank page</h3>
+                <p className="mt-1 max-w-sm text-sm text-muted-foreground">Create your first project to organize a manuscript, characters, and story beats.</p>
+                <button onClick={onCreateNewProject} className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+                  <Plus className="h-4 w-4" /> Create a project
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-3 xl:grid-cols-2">
+                {projects.map((proj) => {
+                  const wordsCount = getProjectWords(proj);
+                  const targetCount = proj.targetWordCount || 80000;
+                  const progressPercent = Math.min(100, Math.round((wordsCount / targetCount) * 100));
+                  const isActive = proj.id === activeProjectId;
 
-                return (
-                  <div
-                    key={proj.id}
-                    className={`group bg-card rounded-xl border transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-2xs ${
-                      isActive
-                        ? 'border-primary shadow-sm hover:shadow-md'
-                        : 'border-border/80 hover:border-border hover:shadow-xs'
-                    }`}
-                  >
-                    {isActive && (
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-                    )}
-
-                    {/* Card Body */}
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        {/* Genre / Tag Row */}
-                        <div className="flex items-center justify-between gap-2 mb-3.5">
-                          <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-muted text-muted-foreground">
-                            {proj.genre}
-                          </span>
-                          {isActive && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                              <span>Active Project</span>
-                            </span>
-                          )}
+                  return (
+                    <article key={proj.id} className={`flex min-w-0 flex-col border bg-card transition-colors ${isActive ? 'border-primary/60' : 'border-border/80 hover:border-border'}`}>
+                      <div className="flex-1 p-4 sm:p-5">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <span className="truncate text-[10px] font-bold uppercase text-muted-foreground">{proj.genre}</span>
+                          {isActive && <span className="inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold text-primary"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Active</span>}
                         </div>
+                        <h3 className="truncate font-serif text-xl text-foreground">{proj.title}</h3>
+                        <p className="mt-1 min-h-10 text-xs leading-relaxed text-muted-foreground line-clamp-2">{proj.synopsis || 'No synopsis added yet.'}</p>
 
-                        {/* Project Title */}
-                        <h3 className="text-base font-bold text-foreground tracking-tight font-serif group-hover:text-primary transition-colors truncate">
-                          {proj.title}
-                        </h3>
-                        {proj.synopsis && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed font-serif italic">
-                            "{proj.synopsis}"
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Progress Bar Row */}
-                      <div className="mt-5">
-                        <div className="flex items-center justify-between text-[11px] mb-1.5">
-                          <div className="flex items-center gap-1 text-muted-foreground font-medium">
-                            <FileText className="w-3.5 h-3.5 text-muted-foreground/80" />
-                            <span className="font-bold tabular-nums text-foreground">
-                              {wordsCount.toLocaleString()}
-                            </span>
-                            <span>/ {targetCount.toLocaleString()} words</span>
+                        <div className="mt-5">
+                          <div className="mb-2 flex items-baseline justify-between gap-2 text-xs">
+                            <span className="min-w-0 truncate text-muted-foreground"><strong className="font-semibold tabular-nums text-foreground">{wordsCount.toLocaleString()}</strong> / {targetCount.toLocaleString()} words</span>
+                            <span className="shrink-0 font-semibold tabular-nums text-foreground">{progressPercent}%</span>
                           </div>
-                          <span className="font-mono font-bold text-primary">{progressPercent}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-indigo-600 rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                          />
+                          <div className="h-1.5 overflow-hidden bg-muted" role="progressbar" aria-label={`${proj.title} word count progress`} aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}>
+                            <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${progressPercent}%` }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Card Actions Footer */}
-                    <div className="px-5 py-3.5 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
-                        <Clock className="w-3 h-3 text-muted-foreground/60" />
-                        <span>Last modified: {new Date(proj.updatedAt || proj.createdAt).toLocaleDateString()}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Delete Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setProjectToDelete(proj.id);
-                          }}
-                          className="p-1.5 rounded-lg border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors shadow-2xs"
-                          title="Delete Project permanently"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Export Project JSON Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            exportProjectJSON(proj);
-                          }}
-                          className="p-1.5 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
-                          title="Download Backup JSON"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Launch/Open Button */}
-                        <button
-                          onClick={() => onSelectProject(proj.id)}
-                          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs border ${
-                            isActive
-                              ? 'bg-primary border-primary text-primary-foreground hover:bg-primary/95 hover:scale-[1.02]'
-                              : 'bg-card border-border/80 text-foreground hover:bg-accent'
-                          }`}
-                        >
-                          <span>Open Studio</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 4. Sidebar Panels */}
-          <div className="w-full md:w-80 flex flex-col gap-6 shrink-0">
-            {/* Quick Tutorial Card */}
-            <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5 mb-2.5">
-                <Compass className="w-4 h-4 text-primary" />
-                <span>WriteAI Quick-Start Tips</span>
-              </h3>
-              <ul className="text-xs text-muted-foreground space-y-3 leading-relaxed">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span>
-                    <strong className="text-foreground">AI Co-Author:</strong> Press the Sparkles icon or highlight text to invoke prompt options directly in line with your canvas.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span>
-                    <strong className="text-foreground">Plot Architecture:</strong> Use the Plot Board to plan plotlines, beats, and keep notes perfectly synchronized.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span>
-                    <strong className="text-foreground">Formatting Book PDF:</strong> Export polished, standard PDF drafts containing custom typography, page numbering, and title sheets.
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Local Storage Notice Card */}
-            <div className="bg-card border border-border/80 rounded-xl p-5 shadow-2xs flex items-start gap-3">
-              <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-foreground">Offline-First Design</h4>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                  All projects are safely backed up locally inside your browser's Local Storage. Feel free to use the <strong>Export Backup (.json)</strong> buttons to keep secondary files saved on your system!
-                </p>
+                      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 bg-muted/20 px-4 py-3 sm:px-5">
+                        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          {new Date(proj.updatedAt || proj.createdAt).toLocaleDateString()}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => setProjectToDelete(proj.id)} className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" title="Delete project" aria-label={`Delete ${proj.title}`}>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => exportProjectJSON(proj)} className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" title="Download backup" aria-label={`Download ${proj.title} backup`}>
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => onSelectProject(proj.id)} className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${isActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-foreground hover:bg-muted/70'}`}>
+                            Open studio <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </footer>
+                    </article>
+                  );
+                })}
               </div>
-            </div>
-          </div>
+            )}
+          </section>
+
+          <aside className="flex flex-col gap-8">
+            <section className="border-l-2 border-primary/60 pl-5 py-1">
+              <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> A note for today
+              </div>
+              <blockquote className="font-serif text-lg leading-relaxed text-foreground">“{quote.text}”</blockquote>
+              <p className="mt-3 text-xs font-semibold text-muted-foreground">{quote.author}</p>
+            </section>
+            {renderCharacterGallery()}
+            <section className="border-t border-border/80 pt-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+                <div>
+                  <h3 className="text-xs font-semibold text-foreground">Your work stays yours</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Projects are stored locally in this browser. Export a JSON backup from any project when you need a separate copy.</p>
+                </div>
+              </div>
+            </section>
+          </aside>
         </div>
-      </div>
+
+        <section className="grid gap-5 border-t border-border/80 py-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          {renderHeatmap()}
+          {renderPlotlineTimeline()}
+        </section>
+      </main>
 
       {/* Delete Confirmation Modal */}
       {projectToDelete && (

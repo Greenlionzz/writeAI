@@ -127,9 +127,9 @@ export const Header: React.FC<HeaderProps> = ({
   ] as const;
 
   return (
-    <header className="h-14 border-b border-border bg-card/95 backdrop-blur px-2.5 sm:px-4 flex items-center justify-between shrink-0 select-none z-30 transition-colors gap-2">
+    <header className="h-14 min-w-0 border-b border-border bg-card/95 backdrop-blur px-2.5 sm:px-4 flex items-center justify-between shrink-0 select-none z-30 transition-colors gap-2">
       {/* Zone 1: Brand & Project Switcher */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 2xl:flex-none">
         {/* Toggle Mobile Outline Button (only when in manuscript view on screens < lg) */}
         {activeView === 'manuscript' && onToggleMobileOutline && (
           <button
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative min-w-0" ref={projectsMenuRef}>
           <button
             onClick={() => setShowProjectsMenu(!showProjectsMenu)}
-            className="flex items-center gap-1 sm:gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded-md hover:bg-accent transition-colors max-w-[80px] xs:max-w-[110px] sm:max-w-[130px] xl:max-w-[210px] truncate"
+            className="flex min-w-0 items-center gap-1 sm:gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded-md hover:bg-accent transition-colors max-w-[72px] xs:max-w-[100px] sm:max-w-[140px] 2xl:max-w-[210px] truncate"
             title={project.title}
           >
             <span className="truncate">{project.title}</span>
@@ -204,15 +204,15 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {savedStatus && (
-          <span className="text-[11px] text-muted-foreground/80 flex items-center gap-1 shrink-0">
+          <span className="hidden 2xl:flex text-[11px] text-muted-foreground/80 items-center gap-1 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="hidden xl:inline">{savedStatus}</span>
+            <span className="hidden 2xl:inline">{savedStatus}</span>
           </span>
         )}
       </div>
 
       {/* Zone 2: Navigation Links (desktop) */}
-      <nav className="hidden lg:flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40 shrink-0">
+      <nav className="hidden lg:flex items-center gap-0.5 bg-muted/50 p-1 rounded-lg border border-border/40 shrink-0">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;
@@ -220,6 +220,8 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               key={item.id}
               onClick={() => setActiveView(item.id)}
+              aria-label={item.label}
+              title={item.label}
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium transition-all ${
                 isActive
                   ? 'bg-card text-foreground shadow-xs border border-border/50 font-semibold'
@@ -227,8 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">{item.label}</span>
-              <span className="lg:hidden">{item.label.split(' ')[0]}</span>
+              <span className="hidden 2xl:inline">{item.label}</span>
             </button>
           );
         })}
@@ -254,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Reader Preview (desktop) */}
         <button
           onClick={onOpenReaderPreview}
-          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex"
+          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden 2xl:flex"
           title="Reader Preview (Formatted Book Mode)"
         >
           <Eye className="w-4 h-4" />
@@ -268,8 +269,8 @@ export const Header: React.FC<HeaderProps> = ({
             title="Search characters, locations & scenes (Ctrl+P)"
           >
             <Search className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline text-[11px] font-normal">Search...</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground/80 bg-card rounded border border-border/80">
+            <span className="hidden 2xl:inline text-[11px] font-normal">Search...</span>
+            <kbd className="hidden 2xl:inline-flex items-center px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground/80 bg-card rounded border border-border/80">
               Ctrl+P
             </kbd>
           </button>
@@ -278,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Theme Switcher (desktop) */}
         <button
           onClick={toggleTheme}
-          className="px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden lg:flex items-center gap-1.5 border border-border/40"
+          className="px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden 2xl:flex items-center gap-1.5 border border-border/40"
           title={`Active Theme: ${settings.theme.toUpperCase()} (Click to toggle: Dark → Light → Sepia)`}
         >
           {settings.theme === 'dark' ? (
@@ -288,7 +289,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <Coffee className="w-3.5 h-3.5 text-amber-700 dark:text-amber-500" />
           )}
-          <span className="text-[11px] capitalize font-medium hidden lg:inline">
+          <span className="text-[11px] capitalize font-medium hidden 2xl:inline">
             {settings.theme}
           </span>
         </button>
@@ -297,7 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onToggleFocusMode && (
           <button
             onClick={onToggleFocusMode}
-            className={`px-2 py-1.5 rounded-md text-xs transition-colors border hidden xl:flex items-center gap-1.5 ${
+            className={`px-2 py-1.5 rounded-md text-xs transition-colors border hidden 2xl:flex items-center gap-1.5 ${
               isFocusMode
                 ? 'bg-primary text-primary-foreground border-primary shadow-xs font-semibold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted border-border/40'
@@ -311,12 +312,12 @@ export const Header: React.FC<HeaderProps> = ({
             {isFocusMode ? (
               <>
                 <Minimize2 className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-medium hidden xl:inline">Exit Focus</span>
+                <span className="text-[11px] font-medium hidden 2xl:inline">Exit Focus</span>
               </>
             ) : (
               <>
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-medium hidden xl:inline">Focus</span>
+                <span className="text-[11px] font-medium hidden 2xl:inline">Focus</span>
               </>
             )}
           </button>
@@ -326,7 +327,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenKeyboardShortcuts && (
           <button
             onClick={onOpenKeyboardShortcuts}
-            className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40 hidden xl:flex"
+            className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40 hidden 2xl:flex"
             title="Keyboard Shortcuts Cheat Sheet (Ctrl+/)"
           >
             <Keyboard className="w-3.5 h-3.5" />
@@ -451,14 +452,14 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Settings button (desktop) */}
         <button
           onClick={onOpenSettings}
-          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden xl:flex"
+          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors hidden 2xl:flex"
           title="Settings & Gemini API Key"
         >
           <Settings className="w-4 h-4" />
         </button>
 
         {/* Mobile Overflow Menu Button (mobile only) */}
-        <div className="relative xl:hidden" ref={mobileMoreMenuRef}>
+        <div className="relative 2xl:hidden" ref={mobileMoreMenuRef}>
           <button
             onClick={() => setShowMobileMoreMenu(!showMobileMoreMenu)}
             className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/40"

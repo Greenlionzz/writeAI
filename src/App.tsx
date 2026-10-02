@@ -27,7 +27,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CorkboardView } from './components/CorkboardView';
 import { StyleCritiquePanel } from './components/StyleCritiquePanel';
-import { PanelLeft } from 'lucide-react';
+import { BookOpen, LayoutGrid, PanelLeft, Sparkles } from 'lucide-react';
 
 import { DashboardView } from './components/DashboardView';
 
@@ -941,39 +941,42 @@ export default function App() {
             )}
 
             {/* Center: Manuscript Column */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
               {/* Unboxed Segmented View Switcher Header (hidden in focus mode) */}
               {!isFocusMode && (
-                <div className="h-11 border-b border-border/80 bg-card/40 px-4 flex items-center justify-between shrink-0 select-none">
+                <div className="min-h-11 border-b border-border/80 bg-card/50 px-3 py-2 sm:px-4 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
                   {/* Left Breadcrumb info */}
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground truncate max-w-40 sm:max-w-none">{activeSceneInfo.bookTitle || 'Book'}</span>
+                  <div className="flex min-w-0 flex-1 items-center gap-2 text-xs">
+                    <span className="min-w-0 max-w-36 truncate text-muted-foreground">{activeSceneInfo.bookTitle || 'Book'}</span>
                     <span className="text-border">/</span>
-                    <span className="font-semibold text-foreground truncate max-w-44 sm:max-w-none">{activeSceneInfo.chapterTitle || 'Unscheduled Chapter'}</span>
+                    <span className="min-w-0 max-w-48 truncate font-semibold text-foreground">{activeSceneInfo.chapterTitle || 'Unscheduled Chapter'}</span>
                   </div>
 
                   {/* Mode switcher tabs (unboxed inline list) */}
-                  <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/40">
+                  <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-border/60 bg-muted/50 p-0.5">
                     <button
                       onClick={() => setManuscriptMode('editor')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      aria-pressed={manuscriptMode === 'editor'}
+                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                         manuscriptMode === 'editor'
                           ? 'bg-card text-foreground shadow-2xs border border-border/20'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <span>✍️</span>
-                      <span>Manuscript Editor</span>
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span className="sm:hidden">Editor</span>
+                      <span className="hidden sm:inline">Manuscript Editor</span>
                     </button>
                     <button
                       onClick={() => setManuscriptMode('corkboard')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                      aria-pressed={manuscriptMode === 'corkboard'}
+                      className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                         manuscriptMode === 'corkboard'
                           ? 'bg-card text-foreground shadow-2xs border border-border/20'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <span>📌</span>
+                      <LayoutGrid className="h-3.5 w-3.5" />
                       <span>Corkboard</span>
                       <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold px-1 rounded-full">
                         {activeSceneInfo.scenes?.length || 0}
@@ -982,7 +985,7 @@ export default function App() {
                   </div>
 
                   {/* Right Header Controls: style audit toggle */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={() => setShowStyleCritiquePanel((prev) => !prev)}
                       className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition-all flex items-center gap-1.5 ${
@@ -992,7 +995,7 @@ export default function App() {
                       }`}
                       title="Toggle Grammarly-style Style suggestions panel"
                     >
-                      <span>✨</span>
+                      <Sparkles className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Style Critique</span>
                     </button>
                   </div>
