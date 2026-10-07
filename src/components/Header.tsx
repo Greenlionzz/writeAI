@@ -24,6 +24,7 @@ import {
   Loader2,
   PanelLeft,
   MoreVertical,
+  GitBranch,
 } from 'lucide-react';
 import { Project, UserSettings } from '../types/writing';
 import {
@@ -37,8 +38,8 @@ import { PDFExportModal } from './PDFExportModal';
 
 interface HeaderProps {
   project: Project;
-  activeView: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
-  setActiveView: (view: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
+  activeView: 'dashboard' | 'manuscript' | 'timeline' | 'plotboard' | 'characters' | 'locations' | 'schedule';
+  setActiveView: (view: 'dashboard' | 'manuscript' | 'timeline' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
   splitReferenceOpen: boolean;
@@ -120,6 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'manuscript', label: 'Manuscript', icon: BookOpen },
+    { id: 'timeline', label: 'Timeline', icon: GitBranch },
     { id: 'plotboard', label: 'Plot Board', icon: LayoutGrid },
     { id: 'characters', label: 'Characters', icon: Users },
     { id: 'locations', label: 'Locations', icon: Compass },

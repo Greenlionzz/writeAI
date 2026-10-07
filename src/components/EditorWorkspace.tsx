@@ -27,11 +27,19 @@ import {
   Trophy,
   Undo,
   Redo,
+  Volume2,
+  VolumeX,
+  Zap,
+  Flame,
+  AlignVerticalJustifyCenter,
+  X,
 } from 'lucide-react';
 import { Scene, UserSettings } from '../types/writing';
 import { analyzeReadability } from '../utils/readability';
 import { ReadabilityInspectorModal } from './ReadabilityInspectorModal';
 import { SmartParagraphModal } from './SmartParagraphModal';
+import { playTypewriterSound } from '../utils/typewriterAudio';
+import { loadSettings, saveSettings } from '../utils/storage';
 
 interface EditorWorkspaceProps {
   scene: Scene | null;
@@ -85,10 +93,134 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
   const [matchCount, setMatchCount] = useState(0);
   const [internalFocusMode, setInternalFocusMode] = useState(false);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isTypewriterMode, setIsTypewriterMode] = useState<boolean>(() => settings.typewriterMode ?? false);
+  const [isTypewriterSound, setIsTypewriterSound] = useState<boolean>(() => settings.typewriterSoundEnabled ?? false);
+  const [typewriterVolume, setTypewriterVolume] = useState<number>(() => settings.typewriterVolume ?? 0.35);
+  const [showSoundPopover, setShowSoundPopover] = useState(false);
+  const [showGoalTooltip, setShowGoalTooltip] = useState(false);
+
+  // Floating selection quick formatting bar
+  const [floatingSelection, setFloatingSelection] = useState<{
+    text: string;
+    wordCount: number;
+  } | null>(null);
+
   // Custom Undo/Redo tracking states
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [currentSceneId, setCurrentSceneId] = useState<string | null>(null);
+
+  // Flow State & Typing Sprint Tracking
+  const [sessionInitialWords, setSessionInitialWords] = useState<number | null>(null);
+  const [sessionWordsCount, setSessionWordsCount] = useState<number>(0);
+  const [currentWpm, setCurrentWpm] = useState<number>(0);
+  const [isFlowActive, setIsFlowActive] = useState<boolean>(false);
+  const [milestoneCelebration, setMilestoneCelebration] = useState<string | null>(null);
+  const keystrokesRef = useRef<number[]>([]);
+  const flowTimerRef = useRef<any>(null);
+  const lastMilestoneRef = useRef<number>(0);
+
+  // Reset session words baseline on scene change
+  useEffect(() => {
+    if (scene && (sessionInitialWords === null || scene.id !== currentSceneId)) {
+      setSessionInitialWords(scene.wordCount || 0);
+      setSessionWordsCount(0);
+      lastMilestoneRef.current = 0;
+    }
+  }, [scene?.id, currentSceneId]);
+
+  // Track added words in session and trigger milestone celebrations
+  useEffect(() => {
+    if (sessionInitialWords !== null && scene) {
+      const currentWords = scene.wordCount || 0;
+      const added = Math.max(0, currentWords - sessionInitialWords);
+      setSessionWordsCount(added);
+
+      if (added >= 100 && Math.floor(added / 100) > Math.floor(lastMilestoneRef.current / 100)) {
+        lastMilestoneRef.current = added;
+        setMilestoneCelebration(`🎉 +${Math.floor(added / 100) * 100} words written in this session!`);
+        if (isTypewriterSound) {
+          playTypewriterSound('bell', typewriterVolume);
+        }
+        const timer = setTimeout(() => setMilestoneCelebration(null), 3500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [scene?.wordCount, sessionInitialWords, isTypewriterSound, typewriterVolume]);
+
+  const recordKeystroke = () => {
+    const now = Date.now();
+    keystrokesRef.current.push(now);
+    const cutoff = now - 30000;
+    keystrokesRef.current = keystrokesRef.current.filter((t) => t > cutoff);
+
+    const calculatedWpm = Math.round(keystrokesRef.current.length * 0.4);
+    setCurrentWpm(calculatedWpm);
+
+    if (calculatedWpm >= 20 && keystrokesRef.current.length >= 12) {
+      setIsFlowActive(true);
+    }
+
+    if (flowTimerRef.current) clearTimeout(flowTimerRef.current);
+    flowTimerRef.current = setTimeout(() => {
+      setIsFlowActive(false);
+      setCurrentWpm(0);
+    }, 4000);
+  };
+
+  const centerCursorInViewport = () => {
+    if (!isTypewriterMode || !textareaRef.current || !scrollContainerRef.current) return;
+    const textarea = textareaRef.current;
+    const container = scrollContainerRef.current;
+
+    const textBeforeCursor = textarea.value.substring(0, textarea.selectionStart);
+    const lineIndex = textBeforeCursor.split('\n').length;
+
+    const lineHeightPx = settings.editorFontSize * 1.85;
+    const cursorYInTextarea = lineIndex * lineHeightPx;
+
+    const textareaRect = textarea.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const targetScrollTop =
+      container.scrollTop +
+      (textareaRect.top - containerRect.top) +
+      cursorYInTextarea -
+      containerRect.height / 2;
+
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: 'smooth',
+    });
+  };
+
+  const handleToggleTypewriterMode = () => {
+    const next = !isTypewriterMode;
+    setIsTypewriterMode(next);
+    const curr = loadSettings();
+    saveSettings({ ...curr, typewriterMode: next });
+    if (next) {
+      setTimeout(centerCursorInViewport, 60);
+    }
+  };
+
+  const handleToggleSound = () => {
+    const next = !isTypewriterSound;
+    setIsTypewriterSound(next);
+    const curr = loadSettings();
+    saveSettings({ ...curr, typewriterSoundEnabled: next });
+    if (next) {
+      playTypewriterSound('key', typewriterVolume);
+    }
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setTypewriterVolume(newVol);
+    const curr = loadSettings();
+    saveSettings({ ...curr, typewriterVolume: newVol });
+    playTypewriterSound('key', newVol);
+  };
 
   // Initialize/reset history when the scene changes
   useEffect(() => {
@@ -148,11 +280,18 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
     return analyzeReadability(debouncedContent);
   }, [debouncedContent]);
 
-  // Daily writing goal metrics based on settings
+  // Daily writing goal metrics based on settings and scene word count
   const dailyGoal = dailyWordGoal || settings.dailyWordGoal || 1000;
+  const sceneWords = scene?.wordCount || 0;
   const wordsToday = todayWordsWritten || 0;
   const goalPercent = Math.min(100, Math.round((wordsToday / dailyGoal) * 100));
   const isGoalMet = wordsToday >= dailyGoal;
+  const sceneGoalPercent = dailyGoal > 0 ? Math.round((sceneWords / dailyGoal) * 100) : 0;
+  const progressRatio = Math.min(1, sceneWords / (dailyGoal || 1));
+  const isGoalExceeded = sceneWords >= dailyGoal;
+  const overflowWords = Math.max(0, sceneWords - dailyGoal);
+  const remainingWords = Math.max(0, dailyGoal - sceneWords);
+  const overflowPercent = Math.max(0, sceneGoalPercent - 100);
 
   // Apply sentence replacement directly to scene prose
   const handleApplySentenceReplacement = (
@@ -486,52 +625,173 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {/* Daily Goal Circular Progress Ring */}
           <div
-            onClick={onOpenSettings}
-            className="flex items-center gap-2 pl-1.5 pr-2 sm:pr-2.5 py-0.5 rounded-full hover:bg-muted text-xs transition-all cursor-pointer group shrink-0 select-none"
-            title={`Daily Word Goal: ${wordsToday.toLocaleString()} of ${dailyGoal.toLocaleString()} words today (${goalPercent}%) - Click to adjust in Settings`}
+            className="relative"
+            onMouseEnter={() => setShowGoalTooltip(true)}
+            onMouseLeave={() => setShowGoalTooltip(false)}
           >
-            <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-              {/* SVG Ring */}
-              <svg className="w-full h-full transform -rotate-90">
-                {/* Track Circle */}
-                <circle
-                  cx="14"
-                  cy="14"
-                  r="11"
-                  className="stroke-muted-foreground/15"
-                  strokeWidth="2.5"
-                  fill="transparent"
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              onFocus={() => setShowGoalTooltip(true)}
+              onBlur={() => setShowGoalTooltip(false)}
+              className={`relative flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full text-xs transition-all duration-200 cursor-pointer group shrink-0 select-none border ${
+                isGoalExceeded
+                  ? 'border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/60'
+                  : 'border-border/60 hover:border-border hover:bg-muted/60'
+              }`}
+              aria-label={`Daily Goal Progress: ${sceneWords.toLocaleString()} of ${dailyGoal.toLocaleString()} words in this scene (${sceneGoalPercent}%)`}
+            >
+              {/* Radial celebration halo pulse when exceeding goal */}
+              {isGoalExceeded && (
+                <span
+                  className="absolute -inset-0.5 rounded-full bg-amber-500/20 blur-xs pointer-events-none animate-pulse"
+                  aria-hidden="true"
                 />
-                {/* Progress Circle Fill */}
-                <circle
-                  cx="14"
-                  cy="14"
-                  r="11"
-                  className={`transition-all duration-500 ease-out ${
-                    isGoalMet ? 'stroke-amber-500' : 'stroke-primary'
-                  }`}
-                  strokeWidth="2.5"
-                  strokeDasharray="69.11" // 2 * Math.PI * 11 = 69.115
-                  strokeDashoffset={69.11 * (1 - Math.min(100, goalPercent) / 100)}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-              {/* Inner Status Indicator */}
-              <div className="absolute inset-0 flex items-center justify-center text-[8px] font-extrabold tabular-nums">
-                {isGoalMet ? (
-                  <Trophy className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
-                ) : (
-                  <span className="text-foreground">{goalPercent}%</span>
-                )}
+              )}
+
+              {/* Progress Ring Visualizer */}
+              <div className="relative flex items-center justify-center w-8 h-8 shrink-0">
+                {/* SVG Ring with Smooth Transitions */}
+                <svg
+                  className="w-full h-full -rotate-90 transform"
+                  viewBox="0 0 32 32"
+                  style={{
+                    filter: isGoalExceeded
+                      ? 'drop-shadow(0 0 4px rgba(245, 158, 11, 0.55))'
+                      : undefined,
+                  }}
+                >
+                  {/* Track Circle */}
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="13"
+                    className="stroke-muted-foreground/15"
+                    strokeWidth="2.75"
+                    fill="none"
+                  />
+                  {/* Progress Circle Fill with Smooth CSS Transition */}
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="13"
+                    className={`transition-[stroke-dashoffset,stroke] duration-500 ease-out ${
+                      isGoalExceeded
+                        ? 'stroke-amber-500 dark:stroke-amber-400'
+                        : 'stroke-primary'
+                    }`}
+                    strokeWidth="2.75"
+                    strokeDasharray="81.68"
+                    strokeDashoffset={81.68 * (1 - progressRatio)}
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                </svg>
+
+                {/* Inner Percentage Display */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className={`font-mono font-bold tracking-tighter tabular-nums leading-none ${
+                      isGoalExceeded
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-foreground'
+                    } ${
+                      sceneGoalPercent >= 1000
+                        ? 'text-[7px]'
+                        : sceneGoalPercent >= 100
+                        ? 'text-[8px]'
+                        : 'text-[9px]'
+                    }`}
+                  >
+                    {sceneGoalPercent}%
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col text-left leading-none hidden sm:flex">
-              <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider scale-90 -ml-1">Daily Goal</span>
-              <span className="text-[10px] font-bold text-foreground tabular-nums mt-0.5">
-                {wordsToday.toLocaleString()} / {dailyGoal.toLocaleString()} <span className="font-medium text-muted-foreground">w</span>
-              </span>
-            </div>
+
+              {/* Stat Details and Overflow Counter */}
+              <div className="flex flex-col text-left leading-tight hidden sm:flex">
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">
+                    Scene / Goal
+                  </span>
+                  {isGoalExceeded && (
+                    <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[8.5px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      <Flame className="w-2.5 h-2.5 shrink-0" />
+                      +{overflowWords.toLocaleString()}w
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-bold text-foreground tabular-nums font-mono mt-0.5">
+                  {sceneWords.toLocaleString()} <span className="font-normal text-muted-foreground">/ {dailyGoal.toLocaleString()}</span>
+                </span>
+              </div>
+            </button>
+
+            {/* Instant Floating Tooltip Card on Hover */}
+            {showGoalTooltip && (
+              <div
+                role="tooltip"
+                className="absolute top-full mt-2 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 z-50 w-64 p-3 bg-popover/95 backdrop-blur-md rounded-xl border border-border shadow-xl text-left animate-in fade-in zoom-in-95 duration-150 pointer-events-none select-none"
+              >
+                <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+                  <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-primary" />
+                    Daily Writing Target
+                  </span>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    {dailyGoal.toLocaleString()} words
+                  </span>
+                </div>
+
+                <div className="py-2 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">This Scene:</span>
+                    <span className="font-bold text-foreground font-mono tabular-nums">
+                      {sceneWords.toLocaleString()} words ({sceneGoalPercent}%)
+                    </span>
+                  </div>
+
+                  {/* Visual Mini Progress Bar */}
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        isGoalExceeded ? 'bg-amber-500' : 'bg-primary'
+                      }`}
+                      style={{ width: `${Math.min(100, sceneGoalPercent)}%` }}
+                    />
+                  </div>
+
+                  <div className="text-[11px]">
+                    {isGoalExceeded ? (
+                      <div className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                        <Trophy className="w-3.5 h-3.5 shrink-0" />
+                        <span>Surpassed daily goal by +{overflowWords.toLocaleString()} words!</span>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground flex items-center justify-between">
+                        <span>Remaining to goal:</span>
+                        <span className="font-semibold text-foreground font-mono">
+                          {remainingWords.toLocaleString()} words
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {wordsToday > 0 && wordsToday !== sceneWords && (
+                    <div className="pt-1.5 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>Today's Total Session:</span>
+                      <span className="font-mono font-medium text-foreground">
+                        {wordsToday.toLocaleString()} words
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-1 text-[10px] text-muted-foreground/80 text-center italic">
+                  Click to customize goal in Settings
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="h-4 w-[1px] bg-border mx-0.5 hidden sm:block shrink-0" />

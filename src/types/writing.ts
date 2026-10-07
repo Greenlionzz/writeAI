@@ -119,6 +119,29 @@ export interface DailyStat {
   writingMinutes: number;
 }
 
+export interface Plotline {
+  id: string;
+  title: string;
+  description?: string;
+  color: string;
+  category: 'Main Plot' | 'Subplot' | 'Character Arc' | 'Theme' | 'World Event';
+  characterId?: string;
+}
+
+export interface TimelineBeat {
+  id: string;
+  plotlineId: string;
+  chapterId: string;
+  title: string;
+  summary: string;
+  tensionLevel: number; // 1 to 5
+  sceneId?: string;
+  characterIds?: string[];
+  locationId?: string;
+  notes?: string;
+  status: 'Idea' | 'Outlined' | 'Drafted' | 'Revised';
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -137,6 +160,8 @@ export interface Project {
   characters: Character[];
   locations: Location[];
   plotCards: PlotCard[];
+  plotlines?: Plotline[];
+  timelineBeats?: TimelineBeat[];
   stats: DailyStat[];
 }
 
@@ -150,6 +175,10 @@ export interface UserSettings {
   soundEffects: boolean;
   dailyWordGoal?: number;
   spellcheckEnabled?: boolean;
+  typewriterMode?: boolean;
+  typewriterSoundEnabled?: boolean;
+  typewriterVolume?: number;
+  flowModeEnabled?: boolean;
 }
 
 export type AIActionType =

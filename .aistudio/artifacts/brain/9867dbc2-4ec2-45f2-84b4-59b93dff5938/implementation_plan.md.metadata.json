@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to configure auto-closing for all header dropdown menus (Project Switcher, Export Menu, and Mobile More Menu) when clicking outside, using highly performant React refs and touch/mouse document listeners.",
-  "updatedAt":  "2026-10-01T17:14:08.981321417Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Implementation plan for the Plottr-style visual multi-plotline timeline and story arc matrix. Features a horizontal swimlane matrix with chapters as columns and colored plotlines as rows, interactive narrative beat cards with tension curves, and a seamless side-by-side inspector drawer for instant cross-referencing between scenes, character profiles, and manuscript notes.",
+  "updatedAt": "2026-10-07T05:37:25.990943431Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

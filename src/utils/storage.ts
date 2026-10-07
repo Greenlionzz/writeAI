@@ -14,6 +14,10 @@ export const defaultSettings: UserSettings = {
   autoSaveIntervalMs: 2000,
   soundEffects: false,
   dailyWordGoal: 1000,
+  typewriterMode: false,
+  typewriterSoundEnabled: false,
+  typewriterVolume: 0.35,
+  flowModeEnabled: true,
 };
 
 export function loadSettings(): UserSettings {

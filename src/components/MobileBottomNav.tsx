@@ -8,11 +8,12 @@ import {
   Sparkles,
   Layers,
   LayoutDashboard,
+  GitBranch,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  activeView: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule';
-  setActiveView: (view: 'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
+  activeView: 'dashboard' | 'manuscript' | 'timeline' | 'plotboard' | 'characters' | 'locations' | 'schedule';
+  setActiveView: (view: 'dashboard' | 'manuscript' | 'timeline' | 'plotboard' | 'characters' | 'locations' | 'schedule') => void;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
   onToggleOutline: () => void;
@@ -75,6 +76,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       >
         <Layers className="w-4 h-4 mb-0.5" />
         <span className="text-[10px] tracking-tight">Outline</span>
+      </button>
+
+      {/* 2.5 Timeline Matrix */}
+      <button
+        onClick={() => setActiveView('timeline')}
+        className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors min-w-[50px] ${
+          activeView === 'timeline'
+            ? 'text-primary font-semibold'
+            : 'text-muted-foreground hover:text-foreground'
+        }`}
+        title="Plottr-style Story Arc Matrix"
+      >
+        <GitBranch className="w-4 h-4 mb-0.5" />
+        <span className="text-[10px] tracking-tight">Timeline</span>
       </button>
 
       {/* 3. Plot Board */}

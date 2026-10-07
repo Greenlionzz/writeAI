@@ -30,6 +30,7 @@ import { StyleCritiquePanel } from './components/StyleCritiquePanel';
 import { BookOpen, LayoutGrid, PanelLeft, Sparkles } from 'lucide-react';
 
 import { DashboardView } from './components/DashboardView';
+import { TimelineMatrixView } from './components/TimelineMatrixView';
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>(() => loadProjects());
@@ -40,7 +41,7 @@ export default function App() {
 
   // Views & Panels
   const [activeView, setActiveView] = useState<
-    'dashboard' | 'manuscript' | 'plotboard' | 'characters' | 'locations' | 'schedule'
+    'dashboard' | 'manuscript' | 'timeline' | 'plotboard' | 'characters' | 'locations' | 'schedule'
   >('dashboard');
   const [splitReferenceOpen, setSplitReferenceOpen] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(true);
@@ -1155,6 +1156,21 @@ export default function App() {
               </>
             )}
           </>
+        )}
+
+        {/* VIEW 1.5: TIMELINE MATRIX */}
+        {activeView === 'timeline' && (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-16 lg:pb-0">
+            <TimelineMatrixView
+              project={currentProject}
+              onUpdateProject={updateProject}
+              settings={settings}
+              onNavigateToScene={(sceneId) => {
+                setActiveSceneId(sceneId);
+                setActiveView('manuscript');
+              }}
+            />
+          </div>
         )}
 
         {/* VIEW 2: PLOT BOARD */}
